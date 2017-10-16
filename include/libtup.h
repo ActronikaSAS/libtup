@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <stdarg.h>
 #include <libsmp.h>
 
 #ifdef __cplusplus
@@ -63,6 +64,18 @@ typedef enum
 
 #define TUP_MESSAGE_TYPE(msg) ((TupMessageType) ((msg)->msgid))
 
+typedef struct
+{
+    uint8_t parameter_id;
+    uint32_t parameter_value;
+} TupParameterArgs;
+
+typedef struct
+{
+    uint8_t sensor_id;
+    uint16_t sensor_value;
+} TupSensorValueArgs;
+
 /* TUP messages */
 void tup_message_clear(TupMessage *message);
 
@@ -87,41 +100,67 @@ int tup_message_parse_stop(TupMessage *message, uint8_t *effect_id);
 
 void tup_message_init_get_version(TupMessage *message);
 
-void tup_message_init_get_parameter(TupMessage *message, uint8_t effect_id,
-        uint8_t parameter_id);
+int tup_message_init_get_parameter(TupMessage *message, uint8_t effect_id,
+        int parameter_id, ...);
+int tup_message_init_get_parameter_valist(TupMessage *message,
+        uint8_t effect_id, int parameter_id, va_list varargs);
+void tup_message_init_get_parameter_simple(TupMessage *message,
+        uint8_t effect_id, uint8_t parameter_id);
+int tup_message_init_get_parameter_array(TupMessage *message,
+        uint8_t effect_id, uint8_t *parameter_ids, size_t n_parameters);
 int tup_message_parse_get_parameter(TupMessage *message, uint8_t *effect_id,
-        uint8_t *parameter_id);
+       uint8_t *parameter_ids, size_t size);
 
-void tup_message_init_set_parameter(TupMessage *message, uint8_t effect_id,
-        uint8_t parameter_id, uint32_t parameter_value);
-int tup_message_parse_set_parameter(TupMessage *message, uint8_t *effect_id,
-        uint8_t *parameter_id, uint32_t *parameter_value);
+int tup_message_init_set_parameter(TupMessage *message, uint8_t effect_id,
+        int parameter_id, uint32_t parameter_value, ...);
+int tup_message_init_set_parameter_valist(TupMessage *message,
+        uint8_t effect_id, int parameter_id, uint32_t parameter_value,
+        va_list varargs);
+void tup_message_init_set_parameter_simple(TupMessage *message,
+        uint8_t effect_id, uint8_t parameter_id, uint32_t parameter_value);
+int tup_message_init_set_parameter_array(TupMessage *message,
+        uint8_t effect_id, TupParameterArgs *params, size_t n_params);
+int tup_message_parse_set_parameter(TupMessage *message,
+        uint8_t *effect_id, TupParameterArgs *params, size_t size);
 
 void tup_message_init_bind_effect(TupMessage *message, uint8_t effect_id,
         unsigned int binding_flags);
 int tup_message_parse_bind_effect(TupMessage *message, uint8_t *effect_id,
         unsigned int *binding_flags);
 
-void tup_message_init_get_sensor_value(TupMessage *message, uint8_t sensor_id);
-int tup_message_parse_get_sensor_value(TupMessage *message, uint8_t *sensor_id);
+int tup_message_init_get_sensor_value(TupMessage *message, int sensor_id, ...);
+int tup_message_init_get_sensor_value_valist(TupMessage *message, int sensor_id,
+        va_list varargs);
+void tup_message_init_get_sensor_value_simple(TupMessage *message,
+        uint8_t sensor_id);
+int tup_message_init_get_sensor_value_array(TupMessage *message,
+        uint8_t *sensor_ids, size_t n_sensors);
+int tup_message_parse_get_sensor_value(TupMessage *message,
+        uint8_t *sensor_ids, size_t size);
 
-void tup_message_init_set_sensor_value(TupMessage *message, uint8_t sensor_id,
-        uint16_t sensor_value);
-int tup_message_parse_set_sensor_value(TupMessage *message, uint8_t *sensor_id,
-        uint16_t *sensor_value);
+int tup_message_init_set_sensor_value(TupMessage *message, int sensor_id,
+        int sensor_value, ...);
+int tup_message_init_set_sensor_value_valist(TupMessage *message, int sensor_id,
+        int sensor_value, va_list varargs);
+void tup_message_init_set_sensor_value_simple(TupMessage *message,
+        int sensor_id, uint16_t sensor_value);
+int tup_message_init_set_sensor_value_array(TupMessage *message,
+        TupSensorValueArgs *args, size_t n_args);
+int tup_message_parse_set_sensor_value(TupMessage *message,
+        TupSensorValueArgs *args, size_t size);
 
 void tup_message_init_resp_version(TupMessage *message, const char *version);
 int tup_message_parse_resp_version(TupMessage *message, const char **version);
 
-void tup_message_init_resp_parameter(TupMessage *message, uint8_t effect_id,
-        uint8_t parameter_id, uint32_t parameter_value);
+int tup_message_init_resp_parameter(TupMessage *message, uint8_t effect_id,
+        TupParameterArgs *args, size_t n_args);
 int tup_message_parse_resp_parameter(TupMessage *message, uint8_t *effect_id,
-        uint8_t *parameter_id, uint32_t *parameter_value);
+        TupParameterArgs *args, size_t size);
 
-void tup_message_init_resp_sensor(TupMessage *message, uint8_t sensor_id,
-        uint16_t sensor_value);
-int tup_message_parse_resp_sensor(TupMessage *message, uint8_t *sensor_id,
-        uint16_t *sensor_value);
+int tup_message_init_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
+        size_t n_args);
+int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
+        size_t size);
 
 #ifdef __cplusplus
 }
