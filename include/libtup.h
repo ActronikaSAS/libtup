@@ -2,6 +2,9 @@
  * Copyright (C) 2017 Actronika SAS
  *     Author: Aurélien Zanelli <aurelien.zanelli@actronika.com>
  */
+/**
+ * @file
+ */
 
 #ifndef LIBTUP_H
 #define LIBTUP_H
@@ -21,8 +24,13 @@ typedef struct TupContext TupContext;
 
 /* TupContext API */
 
+/**
+ * \ingroup context
+ * Callbacks structure
+ */
 typedef struct
 {
+    /** called when a new message has been received. */
     void (*new_message)(TupContext *ctx, TupMessage *message, void *userdata);
 } TupCallbacks;
 
@@ -43,6 +51,10 @@ int tup_context_process_fd(TupContext *ctx);
 
 /* TupMessage API */
 
+/**
+ * \ingroup message
+ * Type of the message
+ */
 typedef enum
 {
     TUP_MESSAGE_ACK = 1,
@@ -62,27 +74,47 @@ typedef enum
     TUP_MESSAGE_RESP_SENSOR = 102,
 } TupMessageType;
 
+/**
+ * \ingroup message
+ * Type of the message
+ */
 #define TUP_MESSAGE_TYPE(msg) ((TupMessageType) ((msg)->msgid))
 
+/**
+ * \ingroup message
+ * Get/Set parameter argument structure
+ */
 typedef struct
 {
-    uint8_t parameter_id;
-    uint32_t parameter_value;
+    uint8_t parameter_id;        /**< parameter id */
+    uint32_t parameter_value;    /**< parameter value */
 } TupParameterArgs;
 
+/**
+ * \ingroup message
+ * Get/Set sensor value structure
+ */
 typedef struct
 {
-    uint8_t sensor_id;
-    uint16_t sensor_value;
+    uint8_t sensor_id;        /**< sensor id */
+    uint16_t sensor_value;    /**< sensor value */
 } TupSensorValueArgs;
 
+/**
+ * \ingroup message
+ * Binding flags
+ */
 typedef enum
 {
-    TUP_BINDING_FLAG_NONE = 0,
-    TUP_BINDING_FLAG_1 = 1,
-    TUP_BINDING_FLAG_2 = 1 << 1,
+    TUP_BINDING_FLAG_NONE = 0,      /**< Unbind */
+    TUP_BINDING_FLAG_1 = 1,         /**< Bind to actuator 1 */
+    TUP_BINDING_FLAG_2 = 1 << 1,    /**< Bind to actuator 2 */
 } TupBindingFlags;
 
+/**
+ * \ingroup message
+ * Bind to both actuators 1 and 2.
+ */
 #define TUP_BINDING_FLAG_BOTH (TUP_BINDING_FLAG_1 | TUP_BINDING_FLAG_2)
 
 /* TUP messages */
