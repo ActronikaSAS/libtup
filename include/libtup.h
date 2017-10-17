@@ -1,4 +1,4 @@
-/* libsmp
+/* libtup
  * Copyright (C) 2017 Actronika SAS
  *     Author: Aurélien Zanelli <aurelien.zanelli@actronika.com>
  */
