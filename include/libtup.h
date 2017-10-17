@@ -46,6 +46,8 @@ int tup_context_init(TupContext *ctx, const char *device, TupCallbacks *cbs,
         void *userdata);
 void tup_context_clear(TupContext *ctx);
 
+int tup_context_get_fd(TupContext *ctx);
+
 int tup_context_send(TupContext *ctx, TupMessage *msg);
 int tup_context_process_fd(TupContext *ctx);
 

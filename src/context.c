@@ -70,6 +70,19 @@ void tup_context_clear(TupContext *ctx)
 
 /**
  * \ingroup context
+ * Get the file descriptor of the opened serial device.
+ *
+ * @param[in] ctx the TupContext
+ *
+ * @return the fd on success, a negative errno value otherwise.
+ */
+int tup_context_get_fd(TupContext *ctx)
+{
+    return smp_serial_frame_get_fd(&ctx->sf_ctx);
+}
+
+/**
+ * \ingroup context
  * Send a message to the peer
  *
  * @param[in] ctx the TupContext
