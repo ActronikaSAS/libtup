@@ -76,6 +76,15 @@ typedef struct
     uint16_t sensor_value;
 } TupSensorValueArgs;
 
+typedef enum
+{
+    TUP_BINDING_FLAG_NONE = 0,
+    TUP_BINDING_FLAG_1 = 1,
+    TUP_BINDING_FLAG_2 = 1 << 1,
+} TupBindingFlags;
+
+#define TUP_BINDING_FLAG_BOTH (TUP_BINDING_FLAG_1 | TUP_BINDING_FLAG_2)
+
 /* TUP messages */
 void tup_message_clear(TupMessage *message);
 
