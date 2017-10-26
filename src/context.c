@@ -9,6 +9,7 @@
 
 #include "libtup.h"
 #include <stdio.h>
+#include "libtup-private.h"
 
 static void on_sf_new_frame(uint8_t *frame, size_t size, void *userdata)
 {

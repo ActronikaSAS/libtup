@@ -12,6 +12,7 @@
 #include "libtup.h"
 #include <errno.h>
 #include <stdarg.h>
+#include "libtup-private.h"
 
 /**
  * \ingroup message
