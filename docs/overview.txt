@@ -1,0 +1,16 @@
+Communication with Tactronik is done using the messaging system provided by
+libsmp. A command is sent by the client to the Tactronik module and then the
+module send an answer.
+For each message sent by client to Tactronik module, the client will receive a
+response, either an ACK, an ERROR or a message from the RESP_* family. If client
+receive no message, it means that the frame was never received by the module or
+got corrupted.
+
+Tactronik use the following UART configuration:
+    Baudrate: 115200
+    Data width: 8 bits
+    Stop: 1 bit
+    Parity: no
+    Control Flow: no
+
+See 'messages.txt' for a description of all messages.

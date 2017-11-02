@@ -1,0 +1,215 @@
+Tactronik UART API messages are based on libsmp. This documents describe the
+arguments used in SMP message.
+
+Message list and ids:
+    1 - ACK
+    2 - ERROR
+
+    10 - LOAD
+    11 - PLAY
+    12 - STOP
+    13 - GET_VERSION
+    14 - GET_PARAMETER
+    15 - SET_PARAMETER
+    16 - BIND_EFFECT
+    17 - GET_SENSOR_VALUE
+    18 - SET_SENSOR_VALUE
+
+    100 - RESP_VERSION
+    101 - RESP_PARAMETER
+    102 - RESP_SENSOR
+
+
+ACK Message:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Message sent by Tactronik when a command have been received and
+        processed without error.
+
+    arguments:
+        uint32_t - id of the acknowledged command
+
+ERROR message:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Message sent by Tactronik when an error occurs when processing a
+        command. Error code are not yet defined.
+
+    arguments:
+        uint32_t - id of the command which causes the error
+        uint32_t - error code
+
+LOAD message:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Ask Tactronik to load an effect from effect library to an effect slot
+
+    arguments:
+        uint8_t - slot to which load the effect
+        uint16_t - id of the effect in the library
+
+    expected response:
+        ACK, ERROR
+
+PLAY message:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Ask Tactronik to play the effect in the given slot
+
+    arguments:
+        uint8_t - slot effect to play
+
+    expected response:
+        ACK, ERROR
+
+STOP message:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Ask Tactronik to stop the effect in the given slot
+
+    arguments:
+        uint8_t - slot effect to stop
+
+    expected response:
+        ACK, ERROR
+
+GET_VERSION:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Ask Tactronik for its version
+
+    arguments:
+        none
+
+    expected response:
+        RESP_VERSION
+
+GET_PARAMETER:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Get parameter values of an effect.
+
+    arguments:
+        uint8_t - slot effect from which get the parameter value
+        n * uint8_t - parameter ids to get
+
+    expected response:
+        RESP_PARAMETER, ERROR
+
+SET_PARAMETER:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Set parameter values of an effect.
+
+    arguments:
+        uint8_t - slot effect from which get the parameter value
+        uint8_t - id of the first parameter to set
+        uint32_t - value of the first parameter to set
+        uint8_t - id of the second parameter to set
+        uint32_t - value of the second parameter to set
+        ...
+
+    expected response:
+        ACK, ERROR
+
+BIND_EFFECT:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Bind effect in given slot to actuators.
+
+    arguments:
+        uint8_t - slot effect to bind to
+        uint8_t - binding flags
+            0x0: none (unbind)
+            0x1: bind to actuators 1
+            0x2: bind to actuators 2
+
+    expected response:
+        ACK, ERROR
+
+GET_SENSOR_VALUE:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Get sensor values.
+
+    arguments:
+        n * uint8_t - sensor from which value should be get
+
+    expected response:
+        RESP_SENSOR, ERROR
+
+SET_SENSOR_VALUE:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Set sensor values.
+
+    arguments:
+        uint8_t - id of the first sensor
+        uint8_t - value of the first sensor to set
+        uint8_t - id of the second sensor
+        uint8_t - value of the second sensor to set
+        ...
+
+    expected response:
+        ACK, ERROR
+
+RESP_VERSION:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Response to a GET_VERSION which contains the tactronik version
+
+    arguments:
+        string - the tactronik version
+
+RESP_PARAMETER:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Response to a GET_PARAMETER command which contains the parameter values
+
+    arguments:
+        uint8_t - slot of the effect
+        uint8_t - id of the first requested parameter
+        uint32_t - value of the first requested parameter
+        uint8_t - id of the second requested parameter
+        uint32_t - value of the second requested parameter
+        ...
+
+RESP_SENSOR:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Response to a GET_SENSOR command which contains the sensor values
+
+    arguments:
+        uint8_t - id of the first requested sensor
+        uint16_t - value of the first requested sensor
+        uint8_t - id of the second requested sensor
+        uint16_t - value of the second requested sensor
+        ...
