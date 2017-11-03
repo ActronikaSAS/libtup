@@ -3,6 +3,29 @@
 This library contains message definition for tactronik UART API and helpers
 to send/receive them.
 
+## Prerequesites
+
+* [meson](http://mesonbuild.com/)
+* [ninja](https://ninja-build.org/)
+
+## Dependencies
+
+* [libsmp](https://github.com/ActronikaSAS/libsmp)
+
+## Building
+
+Dependencies should be either installed in your system or cloned in `subproject`
+directory.
+
+Then building only requires a few step:
+```bash
+$ meson build
+$ cd build
+$ ninja
+```
+
+Resulting library is available in the `build` directory.
+
 ## Basic usage
 
 This very basic exemple demonstrates how to ask Tactronik to play effect.
