@@ -167,9 +167,9 @@ SET_SENSOR_VALUE:
 
     arguments:
         uint8_t - id of the first sensor
-        uint8_t - value of the first sensor to set
+        uint16_t - value of the first sensor to set
         uint8_t - id of the second sensor
-        uint8_t - value of the second sensor to set
+        uint16_t - value of the second sensor to set
         ...
 
     expected response:
