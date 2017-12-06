@@ -2,9 +2,13 @@
 #include <unistd.h>
 #include <libtup.h>
 
-#define EFFECT_ID_SCROLL 0x08
+#define EFFECT_ID_SCROLL 0x10
+#define SENSOR_ID_X1 2
 #define SENSOR_ID_Y1 3
+#define SENSOR_ID_X2 5
+#define SENSOR_ID_Y2 6
 #define SENSOR_ID_N_FINGERS 18
+
 
 static void on_new_message(TupContext *ctx, TupMessage *message, void *userdata)
 {
@@ -59,14 +63,24 @@ int main(int argc, char *argv[])
 
     tup_message_clear(&msg);
 
-    for (i = 0; i < 1000; i++) {
-        tup_message_init_set_sensor_value(&msg, SENSOR_ID_Y1, i, -1);
+    // Set finger 1 position
+    tup_message_init_set_sensor_value(&msg, SENSOR_ID_X1, 0, SENSOR_ID_Y1, 0, -1);
+    ret = tup_context_send(&ctx, &msg);
+    if (ret < 0)
+        goto send_fail;
+
+    tup_message_clear(&msg);
+
+    for (i = 0; i < 1000; i+= 50) {
+        // set finger 2 position
+        tup_message_init_set_sensor_value(&msg, SENSOR_ID_X2, i, SENSOR_ID_Y2, i, -1);
         ret = tup_context_send(&ctx, &msg);
         if (ret < 0)
             goto send_fail;
 
         tup_message_clear(&msg);
-        usleep(5000);
+
+        usleep(50000);
     }
 
     tup_context_clear(&ctx);

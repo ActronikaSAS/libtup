@@ -2,9 +2,8 @@
 #include <unistd.h>
 #include <libtup.h>
 
-#define EFFECT_ID_SCROLL 0x08
-#define SENSOR_ID_Y1 3
-#define SENSOR_ID_N_FINGERS 18
+#define EFFECT_ID_CLICK 0x01
+#define SENSOR_ID_FORCE 14
 
 static void on_new_message(TupContext *ctx, TupMessage *message, void *userdata)
 {
@@ -28,8 +27,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    /* Load effect scroll to slot 0 */
-    tup_message_init_load(&msg, 0, EFFECT_ID_SCROLL);
+    /* Load effect click to slot 0 */
+    tup_message_init_load(&msg, 0, EFFECT_ID_CLICK);
     ret = tup_context_send(&ctx, &msg);
     if (ret < 0)
         goto send_fail;
@@ -52,22 +51,37 @@ int main(int argc, char *argv[])
 
     tup_message_clear(&msg);
 
-    tup_message_init_set_sensor_value(&msg, SENSOR_ID_N_FINGERS, 2, -1);
+    for (int j = 0; j < 2; j++) {
+        for (i = 0; i < 1000; i+= 50) {
+            tup_message_init_set_sensor_value(&msg, SENSOR_ID_FORCE, i, -1);
+            ret = tup_context_send(&ctx, &msg);
+            if (ret < 0)
+                goto send_fail;
+
+            tup_message_clear(&msg);
+
+            usleep(100000);
+        }
+
+        for (i = 1000; i > 200; i-= 50) {
+            tup_message_init_set_sensor_value(&msg, SENSOR_ID_FORCE, i, -1);
+            ret = tup_context_send(&ctx, &msg);
+            if (ret < 0)
+                goto send_fail;
+
+            tup_message_clear(&msg);
+
+            usleep(100000);
+        }
+    }
+    sleep(1);
+
+    tup_message_init_set_sensor_value(&msg, SENSOR_ID_FORCE, 0, -1);
     ret = tup_context_send(&ctx, &msg);
     if (ret < 0)
         goto send_fail;
 
     tup_message_clear(&msg);
-
-    for (i = 0; i < 1000; i++) {
-        tup_message_init_set_sensor_value(&msg, SENSOR_ID_Y1, i, -1);
-        ret = tup_context_send(&ctx, &msg);
-        if (ret < 0)
-            goto send_fail;
-
-        tup_message_clear(&msg);
-        usleep(5000);
-    }
 
     tup_context_clear(&ctx);
     return 0;

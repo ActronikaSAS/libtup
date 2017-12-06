@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <libtup.h>
 
-#define EFFECT_ID_CLICK 0
+#define EFFECT_ID_CLICK 0x05
 #define SENSOR_ID_FORCE 14
 
 static void on_new_message(TupContext *ctx, TupMessage *message, void *userdata)
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     tup_message_clear(&msg);
 
     for (i = 0; i < 10; i++) {
-        tup_message_init_set_sensor_value(&msg, SENSOR_ID_FORCE, 951, -1);
+        tup_message_init_set_sensor_value(&msg, SENSOR_ID_FORCE, 1010, -1);
         ret = tup_context_send(&ctx, &msg);
         if (ret < 0)
             goto send_fail;
