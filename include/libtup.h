@@ -122,6 +122,20 @@ typedef enum
     TUP_BINDING_FLAG_NONE = 0,      /**< Unbind */
     TUP_BINDING_FLAG_1 = 1,         /**< Bind to actuator 1 */
     TUP_BINDING_FLAG_2 = 1 << 1,    /**< Bind to actuator 2 */
+    TUP_BINDING_FLAG_3 = 1 << 2,    /**< Bind to actuator 3 */
+    TUP_BINDING_FLAG_4 = 1 << 3,    /**< Bind to actuator 4 */
+    TUP_BINDING_FLAG_5 = 1 << 4,    /**< Bind to actuator 5 */
+    TUP_BINDING_FLAG_6 = 1 << 5,    /**< Bind to actuator 6 */
+    TUP_BINDING_FLAG_7 = 1 << 6,    /**< Bind to actuator 7 */
+    TUP_BINDING_FLAG_8 = 1 << 7,    /**< Bind to actuator 8 */
+    TUP_BINDING_FLAG_9 = 1 << 8,    /**< Bind to actuator 9 */
+    TUP_BINDING_FLAG_10 = 1 << 9,   /**< Bind to actuator 10 */
+    TUP_BINDING_FLAG_11 = 1 << 10,   /**< Bind to actuator 11 */
+    TUP_BINDING_FLAG_12 = 1 << 11,   /**< Bind to actuator 12 */
+    TUP_BINDING_FLAG_13 = 1 << 12,   /**< Bind to actuator 13 */
+    TUP_BINDING_FLAG_14 = 1 << 13,   /**< Bind to actuator 14 */
+    TUP_BINDING_FLAG_15 = 1 << 14,   /**< Bind to actuator 15 */
+    TUP_BINDING_FLAG_16 = 1 << 15,   /**< Bind to actuator 16 */
 } TupBindingFlags;
 
 /**
