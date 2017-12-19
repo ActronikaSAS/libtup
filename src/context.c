@@ -83,6 +83,24 @@ void tup_context_clear(TupContext *ctx)
 
 /**
  * \ingroup context
+ * Set serial config. Depending on the system, it could be not implemented.
+ *
+ * @param[in] ctx the TupContext to initialize
+ * @param[in] baudrate the baudrate
+ * @param[in] parity the parity configuration
+ * @param[in] flow_control 1 to enable flow control, 0 to disable
+ *
+ * @return 0 on success, a negative errno otherwise.
+ */
+int tup_context_set_config(TupContext *ctx, SmpSerialFrameBaudrate baudrate,
+        SmpSerialFrameParity parity, int flow_control)
+{
+    return smp_serial_frame_set_config(&ctx->sf_ctx, baudrate, parity,
+            flow_control);
+}
+
+/**
+ * \ingroup context
  * Get the file descriptor of the opened serial device.
  *
  * @param[in] ctx the TupContext
