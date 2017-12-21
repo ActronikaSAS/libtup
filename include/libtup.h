@@ -60,7 +60,7 @@ void tup_context_clear(TupContext *ctx);
 int tup_context_set_config(TupContext *ctx, SmpSerialFrameBaudrate baudrate,
         SmpSerialFrameParity parity, int flow_control);
 
-int tup_context_get_fd(TupContext *ctx);
+intptr_t tup_context_get_fd(TupContext *ctx);
 
 int tup_context_send(TupContext *ctx, TupMessage *msg);
 int tup_context_process_fd(TupContext *ctx);

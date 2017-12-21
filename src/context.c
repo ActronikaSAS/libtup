@@ -107,7 +107,7 @@ int tup_context_set_config(TupContext *ctx, SmpSerialFrameBaudrate baudrate,
  *
  * @return the fd on success, a negative errno value otherwise.
  */
-int tup_context_get_fd(TupContext *ctx)
+intptr_t tup_context_get_fd(TupContext *ctx)
 {
     return smp_serial_frame_get_fd(&ctx->sf_ctx);
 }

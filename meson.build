@@ -5,25 +5,27 @@ project('tup', 'c',
       'warning_level=2'
       ])
 
-add_project_arguments([
-    # warnings flags
-    '-Wno-unused-parameter',
-    '-Wformat-nonliteral',
-    '-Wformat-security',
-    '-Winit-self',
-    '-Wswitch-default',
-    '-Wuninitialized',
-    '-Wmaybe-uninitialized',
-    '-Wshadow',
-    '-Wframe-larger-than=4096',
-    '-Wpointer-arith',
-    '-Wundef',
-    '-Wcast-qual',
-    '-Wjump-misses-init',
-    '-Wmissing-prototypes',
-    '-Wno-type-limits',
-    '-fstack-usage',
-    ], language : 'c')
+if meson.get_compiler('c').get_id() == 'gcc'
+  add_project_arguments([
+      # warnings flags
+      '-Wno-unused-parameter',
+      '-Wformat-nonliteral',
+      '-Wformat-security',
+      '-Winit-self',
+      '-Wswitch-default',
+      '-Wuninitialized',
+      '-Wmaybe-uninitialized',
+      '-Wshadow',
+      '-Wframe-larger-than=4096',
+      '-Wpointer-arith',
+      '-Wundef',
+      '-Wcast-qual',
+      '-Wjump-misses-init',
+      '-Wmissing-prototypes',
+      '-Wno-type-limits',
+      '-fstack-usage',
+      ], language : 'c')
+endif
 
 libsmp_dep = subproject('libsmp').get_variable('libsmp_dep')
 
