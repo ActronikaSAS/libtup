@@ -854,6 +854,17 @@ int tup_message_parse_set_sensor_value(TupMessage *message,
 
 /**
  * \ingroup message
+ * Initialize a get_buildinfo message.
+ *
+ * @param[in] message the TupMessage
+ */
+void tup_message_init_get_buildinfo(TupMessage *message)
+{
+    smp_message_init(message, TUP_MESSAGE_CMD_GET_BUILDINFO);
+}
+
+/**
+ * \ingroup message
  * Initialize a version response message with the given version.
  * Warning: due to smp limitation about string, version should exist as long as
  * message exist.
@@ -1031,4 +1042,39 @@ int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
     }
 
     return n_params;
+}
+
+/**
+ * \ingroup message
+ * Initialize a buildinfo response message with the given buildinfo.
+ * Warning: due to smp limitation about string, version should exist as long as
+ * message exist.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] buildinfo the buildinfo to report
+ */
+void tup_message_init_resp_buildinfo(TupMessage *message, const char *buildinfo)
+{
+    smp_message_init(message, TUP_MESSAGE_RESP_BUILDINFO);
+    smp_message_set_cstring(message, 0, buildinfo);
+}
+
+/**
+ * \ingroup message
+ * Parse a buildinfo response message
+ * Warning: buildinfo is not copied and so it is valid as long as message is
+ * valid.
+ *
+ * @param[in] message the TupMessage
+ * @param[out] buildinfo the buildinfo
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_parse_resp_buildinfo(TupMessage *message,
+        const char **buildinfo)
+{
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_BUILDINFO)
+        return -EBADMSG;
+
+    return smp_message_get_cstring(message, 0, buildinfo);
 }

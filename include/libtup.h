@@ -84,10 +84,12 @@ typedef enum
     TUP_MESSAGE_CMD_BIND_EFFECT = 16,
     TUP_MESSAGE_CMD_GET_SENSOR_VALUE = 17,
     TUP_MESSAGE_CMD_SET_SENSOR_VALUE = 18,
+    TUP_MESSAGE_CMD_GET_BUILDINFO = 19,
 
     TUP_MESSAGE_RESP_VERSION = 100,
     TUP_MESSAGE_RESP_PARAMETER = 101,
     TUP_MESSAGE_RESP_SENSOR = 102,
+    TUP_MESSAGE_RESP_BUILDINFO = 103
 } TupMessageType;
 
 /**
@@ -220,6 +222,8 @@ int tup_message_init_set_sensor_value_array(TupMessage *message,
 int tup_message_parse_set_sensor_value(TupMessage *message,
         TupSensorValueArgs *args, size_t size);
 
+void tup_message_init_get_buildinfo(TupMessage *message);
+
 void tup_message_init_resp_version(TupMessage *message, const char *version);
 int tup_message_parse_resp_version(TupMessage *message, const char **version);
 
@@ -232,6 +236,10 @@ int tup_message_init_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
         size_t n_args);
 int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
         size_t size);
+
+void tup_message_init_resp_buildinfo(TupMessage *message, const char *buildinfo);
+int tup_message_parse_resp_buildinfo(TupMessage *message,
+        const char **buildinfo);
 
 #ifdef __cplusplus
 }
