@@ -182,6 +182,13 @@ static void on_tup_message(TupContext *ctx, TupMessage *message, void *userdata)
                     args[0].sensor_value);
             break;
         }
+        case TUP_MESSAGE_RESP_BUILDINFO: {
+            const char *buildinfo;
+
+            tup_message_parse_resp_buildinfo(message, &buildinfo);
+            printf("build information:\n%s", buildinfo);
+            break;
+        }
         default:
             printf("Unhandled message id %d\n", TUP_MESSAGE_TYPE(message));
             break;
@@ -272,6 +279,18 @@ static int do_get_version(int argc, char *argv[])
 
     printf("Getting version\n");
     tup_message_init_get_version(&msg);
+    ret = tup_context_send(&tup_ctx, &msg);
+    tup_message_clear(&msg);
+    return ret;
+}
+
+static int do_get_buildinfo(int argc, char *argv[])
+{
+    TupMessage msg;
+    int ret;
+
+    printf("Getting buildinfo\n");
+    tup_message_init_get_buildinfo(&msg);
     ret = tup_context_send(&tup_ctx, &msg);
     tup_message_clear(&msg);
     return ret;
@@ -415,6 +434,7 @@ static const Command cmds[] = {
     { "play", "<slot-id>", "play the effect in given slot", do_play },
     { "stop", "<slot-id>", "stop the effect in given slot", do_stop },
     { "get_version", "", "get the tactronik version", do_get_version },
+    { "get_buildinfo", "", "get the tactronik build info", do_get_buildinfo },
     { "get_parameter", "<slot-id> <parameter-id>",
         "get parameter with givent id of effect in given slot",
         do_get_parameter },
