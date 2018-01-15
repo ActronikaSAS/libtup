@@ -314,7 +314,7 @@ int tup_message_init_get_parameter_array(TupMessage *message,
         uint8_t effect_id, uint8_t *parameter_ids, size_t n_parameters)
 {
     int ret;
-    int i;
+    size_t i;
 
     smp_message_init(message, TUP_MESSAGE_CMD_GET_PARAMETER);
     smp_message_set_uint8(message, 0, effect_id);
@@ -355,8 +355,9 @@ int tup_message_parse_get_parameter(TupMessage *message, uint8_t *effect_id,
     if (ret < 0)
         return ret;
 
+    /* n_params >= 0 as we already get one arg */
     n_params = smp_message_n_args(message) - 1;
-    if (size < n_params) {
+    if (size < (size_t) n_params) {
         /* array too small */
         return -ENOMEM;
     }
@@ -471,7 +472,7 @@ int tup_message_init_set_parameter_array(TupMessage *message,
         uint8_t effect_id, TupParameterArgs *params, size_t n_params)
 {
     int ret;
-    int i, j;
+    size_t i, j;
 
     smp_message_init(message, TUP_MESSAGE_CMD_SET_PARAMETER);
     smp_message_set_uint8(message, 0, effect_id);
@@ -516,9 +517,10 @@ int tup_message_parse_set_parameter(TupMessage *message,
     if (ret < 0)
         return ret;
 
-    /* we use two args in SmpMessage for one parameter */
+    /* we use two args in SmpMessage for one parameter and n_args > 0 as we
+     * already get one */
     n_params = (smp_message_n_args(message) - 1) / 2;
-    if (size < n_params)
+    if (size < (size_t) n_params)
         return -ENOMEM;
 
     for (i = 0, j = 1; i < n_params; i++, j += 2) {
@@ -657,7 +659,7 @@ int tup_message_init_get_sensor_value_array(TupMessage *message,
         uint8_t *sensor_ids, size_t n_sensors)
 {
     int ret;
-    int i;
+    size_t i;
 
     smp_message_init(message, TUP_MESSAGE_CMD_GET_SENSOR_VALUE);
     for (i = 0; i < n_sensors; i++) {
@@ -690,8 +692,9 @@ int tup_message_parse_get_sensor_value(TupMessage *message,
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_GET_SENSOR_VALUE)
         return -EBADMSG;
 
+    /* n_params >= 0 as we already get one arg */
     n_params = smp_message_n_args(message);
-    if (size < n_params)
+    if (size < (size_t) n_params)
         return -ENOMEM;
 
     for (i = 0; i < n_params; i++) {
@@ -797,7 +800,7 @@ int tup_message_init_set_sensor_value_array(TupMessage *message,
         TupSensorValueArgs *args, size_t n_args)
 {
     int ret;
-    int i, j;
+    size_t i, j;
 
     smp_message_init(message, TUP_MESSAGE_CMD_SET_SENSOR_VALUE);
     for (i = 0, j = 0; i < n_args; i++, j += 2) {
@@ -836,7 +839,7 @@ int tup_message_parse_set_sensor_value(TupMessage *message,
 
     /* we use two args in SmpMessage for one sensor value */
     n_params = smp_message_n_args(message) / 2;
-    if (size < n_params)
+    if (size < (size_t) n_params)
         return -ENOMEM;
 
     for (i = 0, j = 0; i < n_params; i++, j += 2) {
@@ -912,7 +915,7 @@ int tup_message_init_resp_parameter(TupMessage *message, uint8_t effect_id,
         TupParameterArgs *args, size_t n_args)
 {
     int ret;
-    int i, j;
+    size_t i, j;
 
     smp_message_init(message, TUP_MESSAGE_RESP_PARAMETER);
     smp_message_set_uint8(message, 0, effect_id);
@@ -956,9 +959,10 @@ int tup_message_parse_resp_parameter(TupMessage *message, uint8_t *effect_id,
     if (ret < 0)
         return ret;
 
-    /* we use two args in SmpMessage for one parameter */
+    /* we use two args in SmpMessage for one parameter and n_args > 0 as we
+     * already get one */
     n_params = (smp_message_n_args(message) - 1) / 2;
-    if (size < n_params)
+    if (size < (size_t) n_params)
         return -ENOMEM;
 
     for (i = 0, j = 1; i < n_params; i++, j += 2) {
@@ -988,7 +992,7 @@ int tup_message_init_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
         size_t n_args)
 {
     int ret;
-    int i, j;
+    size_t i, j;
 
     smp_message_init(message, TUP_MESSAGE_RESP_SENSOR);
 
@@ -1028,7 +1032,7 @@ int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
 
     /* we use two args in SmpMessage for one parameter */
     n_params = smp_message_n_args(message) / 2;
-    if (size < n_params)
+    if (size < (size_t) n_params)
         return -ENOMEM;
 
     for (i = 0, j = 0; i < n_params; i++, j += 2) {
