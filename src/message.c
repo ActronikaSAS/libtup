@@ -581,22 +581,25 @@ int tup_message_parse_bind_effect(TupMessage *message, uint8_t *effect_id,
 
 /**
  * \ingroup message
- * Initialize a get_sensor_value message.
- * Variable argument is a list of sensor id. Last sensor id shall be -1.
+ * Initialize a get_input_value message.
+ * Variable argument is a list of input id. Last input id shall be -1.
  *
  * @param[in] message the TupMessage
- * @param[in] sensor_id id of the first sensor value to get
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the first input value to get
  * @param[in] ... variable argument
  *
  * @return 0 on success, a negative errno value otherwise.
  */
-int tup_message_init_get_sensor_value(TupMessage *message, int sensor_id, ...)
+int tup_message_init_get_input_value(TupMessage *message, int effect_slot_id,
+        int input_id, ...)
 {
     va_list ap;
     int ret;
 
-    va_start(ap, sensor_id);
-    ret = tup_message_init_get_sensor_value_valist(message, sensor_id, ap);
+    va_start(ap, input_id);
+    ret = tup_message_init_get_input_value_valist(message, effect_slot_id,
+            input_id, ap);
     va_end(ap);
 
     return ret;
@@ -604,29 +607,34 @@ int tup_message_init_get_sensor_value(TupMessage *message, int sensor_id, ...)
 
 /**
  * \ingroup message
- * Initialize a get_sensor_value message using a valist.
- * Variable argument is a list of sensor id. Last sensor id shall be -1.
+ * Initialize a get_input_value message using a valist.
+ * Variable argument is a list of input id. Last input id shall be -1.
  *
  * @param[in] message the TupMessage
- * @param[in] sensor_id id of the first sensor value to get
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the first input value to get
  * @param[in] varargs variable argument
  *
  * @return 0 on success, a negative errno value otherwise.
  */
-int tup_message_init_get_sensor_value_valist(TupMessage *message, int sensor_id,
-        va_list varargs)
+int tup_message_init_get_input_value_valist(TupMessage *message,
+        int effect_slot_id, int input_id, va_list varargs)
 {
     int ret;
     int i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_SENSOR_VALUE);
+    smp_message_init(message, TUP_MESSAGE_CMD_GET_INPUT_VALUE);
 
-    for (i = 0; sensor_id != -1; i++) {
-        ret = smp_message_set_uint8(message, i, sensor_id);
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 1; input_id != -1; i++) {
+        ret = smp_message_set_uint8(message, i, input_id);
         if (ret < 0)
             return ret;
 
-        sensor_id = va_arg(varargs, int);
+        input_id = va_arg(varargs, int);
     }
 
     return 0;
@@ -634,36 +642,43 @@ int tup_message_init_get_sensor_value_valist(TupMessage *message, int sensor_id,
 
 /**
  * \ingroup message
- * Initialize a get_sensor_value message with one sensor.
+ * Initialize a get_input_value message with one input.
  *
  * @param[in] message the TupMessage
- * @param[in] sensor_id id of the sensor value to get
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the input value to get
  */
-void tup_message_init_get_sensor_value_simple(TupMessage *message,
-        uint8_t sensor_id)
+void tup_message_init_get_input_value_simple(TupMessage *message,
+        uint8_t effect_slot_id, uint8_t input_id)
 {
-    tup_message_init_get_sensor_value(message, sensor_id, -1);
+    tup_message_init_get_input_value(message, effect_slot_id, input_id, -1);
 }
 
 /**
  * \ingroup message
- * Initialize a get_sensor_value message from an array of ids.
+ * Initialize a get_input_value message from an array of ids.
  *
  * @param[in] message the TupMessage
- * @param[in] sensor_ids an array of sensor ids to get
- * @param[in] n_sensors the number of sensor ids in sensor_ids
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_ids an array of input ids to get
+ * @param[in] n_inputs the number of input ids in input_ids
  *
  * @return 0 on success, a negative errno value otherwise.
  */
-int tup_message_init_get_sensor_value_array(TupMessage *message,
-        uint8_t *sensor_ids, size_t n_sensors)
+int tup_message_init_get_input_value_array(TupMessage *message,
+        uint8_t effect_slot_id, uint8_t *input_ids, size_t n_inputs)
 {
     int ret;
     size_t i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_SENSOR_VALUE);
-    for (i = 0; i < n_sensors; i++) {
-        ret = smp_message_set_uint8(message, i, sensor_ids[i]);
+    smp_message_init(message, TUP_MESSAGE_CMD_GET_INPUT_VALUE);
+
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 1; i <= n_inputs; i++) {
+        ret = smp_message_set_uint8(message, i, input_ids[i]);
         if (ret < 0)
             return ret;
     }
@@ -673,32 +688,39 @@ int tup_message_init_get_sensor_value_array(TupMessage *message,
 
 /**
  * \ingroup message
- * Parse a get_sensor_value message and store the result in sensor_ids.
+ * Parse a get_input_value message and store the result in input_ids.
  *
  * @param[in] message the TupMessage
- * @param[out] sensor_ids pointer to an array of sensor ids
- * @param[in] size the size of sensor_ids array
+ * @param[out] effect_slot_id id of the effect to update values
+ * @param[out] input_ids pointer to an array of input ids
+ * @param[in] size the size of input_ids array
  *
- * @return the number of sensor to get on success, a negative errno value
+ * @return the number of input to get on success, a negative errno value
  * otherwise.
  */
-int tup_message_parse_get_sensor_value(TupMessage *message,
-        uint8_t *sensor_ids, size_t size)
+int tup_message_parse_get_input_value(TupMessage *message,
+        uint8_t *effect_slot_id, uint8_t *input_ids, size_t size)
 {
     int n_params = 0;
     int ret;
     int i;
 
-    if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_GET_SENSOR_VALUE)
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_GET_INPUT_VALUE)
         return -EBADMSG;
 
     /* n_params >= 0 as we already get one arg */
-    n_params = smp_message_n_args(message);
+    n_params = smp_message_n_args(message) - 1;
     if (size < (size_t) n_params)
         return -ENOMEM;
 
+    ret = smp_message_get_uint8(message, 0, effect_slot_id);
+    if (ret < 0) {
+        /* should not happen */
+        return ret;
+    }
+
     for (i = 0; i < n_params; i++) {
-        ret = smp_message_get_uint8(message, i, &sensor_ids[i]);
+        ret = smp_message_get_uint8(message, i+1, &input_ids[i]);
         if (ret < 0) {
             /* should not happen */
             return ret;
@@ -710,26 +732,27 @@ int tup_message_parse_get_sensor_value(TupMessage *message,
 
 /**
  * \ingroup message
- * Initialize a set_sensor_value message.
- * Variable argument is a list of sensor id and sensor value.
- * Last sensor id shall be -1.
+ * Initialize a set_input_value message.
+ * Variable argument is a list of input id and input value.
+ * Last input id shall be -1.
  *
  * @param[in] message the TupMessage
- * @param[in] sensor_id id of the first sensor value to set
- * @param[in] sensor_value the first value to set
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the first input value to set
+ * @param[in] input_value the first value to set
  * @param[in] ... variable argument
  *
  * @return 0 on success, a negative errno value otherwise.
  */
-int tup_message_init_set_sensor_value(TupMessage *message, int sensor_id,
-        int sensor_value, ...)
+int tup_message_init_set_input_value(TupMessage *message,
+        int effect_slot_id, int input_id, int input_value, ...)
 {
     va_list ap;
     int ret;
 
-    va_start(ap, sensor_value);
-    ret = tup_message_init_set_sensor_value_valist(message, sensor_id,
-            sensor_value, ap);
+    va_start(ap, input_value);
+    ret = tup_message_init_set_input_value_valist(message, effect_slot_id,
+            input_id, input_value, ap);
     va_end(ap);
 
     return ret;
@@ -737,36 +760,41 @@ int tup_message_init_set_sensor_value(TupMessage *message, int sensor_id,
 
 /**
  * \ingroup message
- * Initialize a set_sensor_value message using va_list.
- * Variable argument is a list of sensor id and sensor value.
- * Last sensor id shall be -1.
+ * Initialize a set_input_value message using va_list.
+ * Variable argument is a list of input id and input value.
+ * Last input id shall be -1.
  *
  * @param[in] message the TupMessage
- * @param[in] sensor_id id of the first sensor value to set
- * @param[in] sensor_value the first value to set
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the first input value to set
+ * @param[in] input_value the first value to set
  * @param[in] varargs variable argument
  *
  * @return 0 on success, a negative errno value otherwise.
  */
-int tup_message_init_set_sensor_value_valist(TupMessage *message, int sensor_id,
-        int sensor_value, va_list varargs)
+int tup_message_init_set_input_value_valist(TupMessage *message,
+        int effect_slot_id, int input_id, int input_value, va_list varargs)
 {
     int ret;
     int i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_SET_SENSOR_VALUE);
+    smp_message_init(message, TUP_MESSAGE_CMD_SET_INPUT_VALUE);
 
-    for (i = 0; sensor_id != -1; i += 2) {
-        ret = smp_message_set_uint8(message, i, sensor_id);
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 1; input_id != -1; i += 2) {
+        ret = smp_message_set_uint8(message, i, input_id);
         if (ret < 0)
             return ret;
 
-        ret = smp_message_set_uint16(message, i + 1, sensor_value);
+        ret = smp_message_set_uint16(message, i + 1, input_value);
         if (ret < 0)
             return ret;
 
-        sensor_id = va_arg(varargs, int);
-        sensor_value = va_arg(varargs, int);
+        input_id = va_arg(varargs, int);
+        input_value = va_arg(varargs, int);
     }
 
     return 0;
@@ -774,41 +802,49 @@ int tup_message_init_set_sensor_value_valist(TupMessage *message, int sensor_id,
 
 /**
  * \ingroup message
- * Initialize a set_sensor_value message for one sensor.
+ * Initialize a set_input_value message for one input.
  *
  * @param[in] message the TupMessage
- * @param[in] sensor_id id of the sensor value to set
- * @param[in] sensor_value the value to set
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the input value to set
+ * @param[in] input_value the value to set
  */
-void tup_message_init_set_sensor_value_simple(TupMessage *message,
-        int sensor_id, uint16_t sensor_value)
+void tup_message_init_set_input_value_simple(TupMessage *message,
+        uint8_t effect_slot_id, uint8_t input_id, int input_value)
 {
-    tup_message_init_set_sensor_value(message, sensor_id, sensor_value, -1);
+    tup_message_init_set_input_value(message, effect_slot_id, input_id,
+            input_value, -1);
 }
 
 /**
  * \ingroup message
- * Initialize a set_sensor_value message from an array of TupSensorValueArgs.
+ * Initialize a set_input_value message from an array of TupInputValueArgs.
  *
  * @param[in] message the TupMessage
- * @param[in] args an array of TupSensorArgs
- * @param[in] n_args the number of args in TupSensorValueArgs
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] args an array of TupInputArgs
+ * @param[in] n_args the number of args in TupInputValueArgs
  *
  * @return 0 on success, a negative errno value otherwise.
  */
-int tup_message_init_set_sensor_value_array(TupMessage *message,
-        TupSensorValueArgs *args, size_t n_args)
+int tup_message_init_set_input_value_array(TupMessage *message,
+        uint8_t effect_slot_id, TupInputValueArgs *args, size_t n_args)
 {
     int ret;
     size_t i, j;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_SET_SENSOR_VALUE);
-    for (i = 0, j = 0; i < n_args; i++, j += 2) {
-        ret = smp_message_set_uint8(message, j, args[i].sensor_id);
+    smp_message_init(message, TUP_MESSAGE_CMD_SET_INPUT_VALUE);
+
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0, j = 1; i < n_args; i++, j += 2) {
+        ret = smp_message_set_uint8(message, j, args[i].input_id);
         if (ret < 0)
             return ret;
 
-        ret = smp_message_set_uint16(message, j + 1, args[i].sensor_value);
+        ret = smp_message_set_uint16(message, j + 1, args[i].input_value);
         if (ret < 0)
             return ret;
     }
@@ -818,36 +854,41 @@ int tup_message_init_set_sensor_value_array(TupMessage *message,
 
 /**
  * \ingroup message
- * Parse a set_sensor_value message and store the result in args.
+ * Parse a set_input_value message and store the result in args.
  *
  * @param[in] message the TupMessage
- * @param[out] args pointer to an array of TupSensorValueArgs
+ * @param[out] effect_slot_id id of the effect to update values
+ * @param[out] args pointer to an array of TupInputValueArgs
  * @param[in] size the size of args array
  *
- * @return the number of sensor value to set on success, a negative errno value
+ * @return the number of input value to set on success, a negative errno value
  * otherwise.
  */
-int tup_message_parse_set_sensor_value(TupMessage *message,
-        TupSensorValueArgs *args, size_t size)
+int tup_message_parse_set_input_value(TupMessage *message,
+        uint8_t *effect_slot_id, TupInputValueArgs *args, size_t size)
 {
     int n_params = 0;
     int ret;
     int i, j;
 
-    if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_SET_SENSOR_VALUE)
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_SET_INPUT_VALUE)
         return -EBADMSG;
 
-    /* we use two args in SmpMessage for one sensor value */
-    n_params = smp_message_n_args(message) / 2;
+    /* we use two args in SmpMessage for one input value */
+    n_params = (smp_message_n_args(message) - 1 ) / 2;
     if (size < (size_t) n_params)
         return -ENOMEM;
 
-    for (i = 0, j = 0; i < n_params; i++, j += 2) {
-        ret = smp_message_get_uint8(message, j, &args[i].sensor_id);
+    ret = smp_message_get_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0, j = 1; i < n_params; i++, j += 2) {
+        ret = smp_message_get_uint8(message, j, &args[i].input_id);
         if (ret < 0)
             return ret;
 
-        ret = smp_message_get_uint16(message, j + 1, &args[i].sensor_value);
+        ret = smp_message_get_uint16(message, j + 1, &args[i].input_value);
         if (ret < 0)
             return ret;
     }
@@ -980,28 +1021,33 @@ int tup_message_parse_resp_parameter(TupMessage *message, uint8_t *effect_id,
 
 /**
  * \ingroup message
- * Initialize a get_sensor_value response message.
+ * Initialize a get_input_value response message.
  *
  * @param[in] message the TupMessage
- * @param[in] args an array of TupSensorValueArgs
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] args an array of TupInputValueArgs
  * @param[in] n_args the number of elements in args
  *
  * @return 0 on success, a negative errno value otherwise.
  */
-int tup_message_init_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
-        size_t n_args)
+int tup_message_init_resp_input(TupMessage *message, uint8_t effect_slot_id,
+        TupInputValueArgs *args, size_t n_args)
 {
     int ret;
     size_t i, j;
 
-    smp_message_init(message, TUP_MESSAGE_RESP_SENSOR);
+    smp_message_init(message, TUP_MESSAGE_RESP_INPUT);
 
-    for (i = 0, j = 0; i < n_args; i++, j += 2) {
-        ret = smp_message_set_uint8(message, j, args[i].sensor_id);
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0, j = 1; i < n_args; i++, j += 2) {
+        ret = smp_message_set_uint8(message, j, args[i].input_id);
         if (ret < 0)
             return ret;
 
-        ret = smp_message_set_uint16(message, j + 1, args[i].sensor_value);
+        ret = smp_message_set_uint16(message, j + 1, args[i].input_value);
         if (ret < 0)
             return ret;
     }
@@ -1011,36 +1057,41 @@ int tup_message_init_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
 
 /**
  * \ingroup message
- * Parse a get_sensor_value response message.
+ * Parse a get_input_value response message.
  *
  * @param[in] message the TupMessage
- * @param[out] args an array of TupSensorValueArgs
+ * @param[out] effect_slot_id id of the effect to update values
+ * @param[out] args an array of TupInputValueArgs
  * @param[in] size the size of args array
  *
- * @return the number of sensor value on success, a negative errno value
+ * @return the number of input value on success, a negative errno value
  * otherwise.
  */
-int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
-        size_t size)
+int tup_message_parse_resp_input(TupMessage *message, uint8_t *effect_slot_id,
+        TupInputValueArgs *args, size_t size)
 {
     int n_params = 0;
     int ret;
     int i, j;
 
-    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_SENSOR)
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_INPUT)
         return -EBADMSG;
 
     /* we use two args in SmpMessage for one parameter */
-    n_params = smp_message_n_args(message) / 2;
+    n_params = smp_message_n_args(message - 1) / 2;
     if (size < (size_t) n_params)
         return -ENOMEM;
 
-    for (i = 0, j = 0; i < n_params; i++, j += 2) {
-        ret = smp_message_get_uint8(message, j, &args[i].sensor_id);
+    ret = smp_message_get_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0, j = 1; i < n_params; i++, j += 2) {
+        ret = smp_message_get_uint8(message, j, &args[i].input_id);
         if (ret < 0)
             return ret;
 
-        ret = smp_message_get_uint16(message, j + 1, &args[i].sensor_value);
+        ret = smp_message_get_uint16(message, j + 1, &args[i].input_value);
         if (ret < 0)
             return ret;
     }

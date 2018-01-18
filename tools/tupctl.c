@@ -174,12 +174,14 @@ static void on_tup_message(TupContext *ctx, TupMessage *message, void *userdata)
                     args[0].parameter_id, args[0].parameter_value);
             break;
         }
-        case TUP_MESSAGE_RESP_SENSOR: {
-            TupSensorValueArgs args[1];
+        case TUP_MESSAGE_RESP_INPUT: {
+            int effect_slot_id;
+            TupInputValueArgs args[1];
 
-            tup_message_parse_resp_sensor(message, args, N_ELEMENTS(args));
-            printf("sensor %d value is %d\n", args[0].sensor_id,
-                    args[0].sensor_value);
+            tup_message_parse_resp_input(message, &effect_slot_id, args,
+                    N_ELEMENTS(args));
+            printf("input %d of effect %d have value %d\n", args[0].input_id,
+                    effect_slot_id, args[0].input_value);
             break;
         }
         case TUP_MESSAGE_RESP_BUILDINFO: {
@@ -381,49 +383,54 @@ static int do_bind_effect(int argc, char *argv[])
     return ret;
 }
 
-static int do_get_sensor_value(int argc, char *argv[])
+static int do_get_input_value(int argc, char *argv[])
 {
     TupMessage msg;
-    int sensor_id;
+    int effect_slot_id;
+    int input_id;
     int ret;
 
-    if (argc != 1) {
-        printf("'get_sensor_value' arguments: <sensor-id>");
+    if (argc != 2) {
+        printf("'get_input_value' arguments: <effect slot id> <input-id>");
         return -EINVAL;
     }
 
-    ret = sscanf(argv[0], "%d", &sensor_id);
-    if (ret != 1) {
-        printf("failed to parse arguments\n");
-        return -EINVAL;
-    }
-
-    tup_message_init_get_sensor_value_simple(&msg, sensor_id);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
-    return ret;
-}
-
-static int do_set_sensor_value(int argc, char *argv[])
-{
-    TupMessage msg;
-    int sensor_id;
-    int sensor_value;
-    int ret;
-
-    if (argc != 1) {
-        printf("'set_sensor_value' arguments: <sensor-id> <value>");
-        return -EINVAL;
-    }
-
-    ret = sscanf(argv[0], "%d", &sensor_id);
-    ret += sscanf(argv[0], "%d", &sensor_value);
+    ret = sscanf(argv[0], "%d", &effect_slot_id);
+    ret += sscanf(argv[1], "%d", &input_id);
     if (ret != 2) {
         printf("failed to parse arguments\n");
         return -EINVAL;
     }
 
-    tup_message_init_set_sensor_value_simple(&msg, sensor_id, sensor_value);
+    tup_message_init_get_input_value_simple(&msg, effect_slot_id, input_id);
+    ret = tup_context_send(&tup_ctx, &msg);
+    tup_message_clear(&msg);
+    return ret;
+}
+
+static int do_set_input_value(int argc, char *argv[])
+{
+    TupMessage msg;
+    int effect_slot_id;
+    int input_id;
+    int input_value;
+    int ret;
+
+    if (argc != 3) {
+        printf("'set_input_value' arguments: <effect slot id> <input-id> <value>");
+        return -EINVAL;
+    }
+
+    ret = sscanf(argv[0], "%d", &effect_slot_id);
+    ret += sscanf(argv[1], "%d", &input_id);
+    ret += sscanf(argv[2], "%d", &input_value);
+    if (ret != 3) {
+        printf("failed to parse arguments\n");
+        return -EINVAL;
+    }
+
+    tup_message_init_set_input_value_simple(&msg, effect_slot_id, input_id,
+            input_value);
     ret = tup_context_send(&tup_ctx, &msg);
     tup_message_clear(&msg);
     return ret;
@@ -443,10 +450,10 @@ static const Command cmds[] = {
     { "bind_effect", "<slot-id> <binding-flags>",
         "bind effect in given slot with actuators (0: unbind)",
         do_bind_effect },
-    { "get_sensor_value", "<sensor-id>", "get the value of the given sensor",
-        do_get_sensor_value },
-    { "set_sensor_value", "<sensor-id> <value>",
-        "set the value of the given sensor", do_set_sensor_value },
+    { "get_input_value", "<input-id>", "get the value of the given input",
+        do_get_input_value },
+    { "set_input_value", "<input-id> <value>",
+        "set the value of the given input", do_set_input_value },
 };
 
 static const Option options[] = {
