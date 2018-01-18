@@ -12,14 +12,18 @@ Message list and ids:
     14 - GET_PARAMETER
     15 - SET_PARAMETER
     16 - BIND_EFFECT
-    17 - GET_SENSOR_VALUE
-    18 - SET_SENSOR_VALUE
+    17 - GET_SENSOR_VALUE @DEPRECATED
+    18 - SET_SENSOR_VALUE @DEPRECATED
     19 - GET_BUILDINFO
+    20 - ACTIVATE_INTERNAL_SENSORS
+    21 - GET_INPUT_VALUE
+    22 - SET_INPUT_VALUE
 
     100 - RESP_VERSION
     101 - RESP_PARAMETER
-    102 - RESP_SENSOR
+    102 - RESP_SENSOR @DEPRECATED
     103 - RESP_BUILDINFO
+    104 - RESP_INPUT
 
 
 ACK Message:
@@ -187,6 +191,51 @@ GET_BUILDINFO:
     arguments:
         none
 
+GET_INPUT_VALUE:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Get input values of an effect.
+
+    arguments:
+        uint8_t - slot of the effect
+        n * uint8_t - input value from which effect should be get
+
+    expected response:
+        RESP_INPUT, ERROR
+
+SET_INPUT_VALUE:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Set input values of an effect.
+
+    arguments:
+        uint8_t - slot of the effect
+        uint8_t - id of the first input
+        int32_t - value of the first input to set
+        uint8_t - id of the second input
+        int32_t - value of the second input to set
+        ...
+
+    expected response:
+        ACK, ERROR
+
+ACTIVATE_INTERNAL_SENSORS:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Command to activate (1) or not (0) the internal sensors management
+
+    arguments:
+        uint8_t - state of the activation
+
+    expected response:
+        ACK, ERROR
+
 RESP_VERSION:
     direction:
         Tactronik --> Client
@@ -235,3 +284,18 @@ RESP_BUILDINFO:
 
     arguments:
         string - firmware components hash
+
+RESP_INPUT:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Response to a GET_INPUT command which contains the input values
+
+    arguments:
+        uint8_t - slot of the effect
+        uint8_t - id of the first requested input
+        uint16_t - value of the first requested input
+        uint8_t - id of the second requested input
+        uint16_t - value of the second requested input
+        ...

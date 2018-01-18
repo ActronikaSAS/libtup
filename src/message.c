@@ -857,6 +857,356 @@ int tup_message_parse_set_sensor_value(TupMessage *message,
 
 /**
  * \ingroup message
+ * Initialize a get_input_value message.
+ * Variable argument is a list of input id. Last input id shall be -1.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the first input value to get
+ * @param[in] ... variable argument
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_init_get_input_value(TupMessage *message, int effect_slot_id,
+        int input_id, ...)
+{
+    va_list ap;
+    int ret;
+
+    va_start(ap, input_id);
+    ret = tup_message_init_get_input_value_valist(message, effect_slot_id,
+            input_id, ap);
+    va_end(ap);
+
+    return ret;
+}
+
+/**
+ * \ingroup message
+ * Initialize a get_input_value message using a valist.
+ * Variable argument is a list of input id. Last input id shall be -1.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the first input value to get
+ * @param[in] varargs variable argument
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_init_get_input_value_valist(TupMessage *message,
+        int effect_slot_id, int input_id, va_list varargs)
+{
+    int ret;
+    int i;
+
+    smp_message_init(message, TUP_MESSAGE_CMD_GET_INPUT_VALUE);
+
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 1; input_id != -1; i++) {
+        ret = smp_message_set_uint8(message, i, input_id);
+        if (ret < 0)
+            return ret;
+
+        input_id = va_arg(varargs, int);
+    }
+
+    return 0;
+}
+
+/**
+ * \ingroup message
+ * Initialize a get_input_value message with one input.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the input value to get
+ */
+void tup_message_init_get_input_value_simple(TupMessage *message,
+        uint8_t effect_slot_id, uint8_t input_id)
+{
+    tup_message_init_get_input_value(message, effect_slot_id, input_id, -1);
+}
+
+/**
+ * \ingroup message
+ * Initialize a get_input_value message from an array of ids.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_ids an array of input ids to get
+ * @param[in] n_inputs the number of input ids in input_ids
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_init_get_input_value_array(TupMessage *message,
+        uint8_t effect_slot_id, uint8_t *input_ids, size_t n_inputs)
+{
+    int ret;
+    size_t i;
+
+    smp_message_init(message, TUP_MESSAGE_CMD_GET_INPUT_VALUE);
+
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 1; i <= n_inputs; i++) {
+        ret = smp_message_set_uint8(message, i, input_ids[i]);
+        if (ret < 0)
+            return ret;
+    }
+
+    return 0;
+}
+
+/**
+ * \ingroup message
+ * Parse a get_input_value message and store the result in input_ids.
+ *
+ * @param[in] message the TupMessage
+ * @param[out] effect_slot_id id of the effect to update values
+ * @param[out] input_ids pointer to an array of input ids
+ * @param[in] size the size of input_ids array
+ *
+ * @return the number of input to get on success, a negative errno value
+ * otherwise.
+ */
+int tup_message_parse_get_input_value(TupMessage *message,
+        uint8_t *effect_slot_id, uint8_t *input_ids, size_t size)
+{
+    int n_params = 0;
+    int ret;
+    int i;
+
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_GET_INPUT_VALUE)
+        return -EBADMSG;
+
+    /* n_params >= 0 as we already get one arg */
+    n_params = smp_message_n_args(message) - 1;
+    if (size < (size_t) n_params)
+        return -ENOMEM;
+
+    ret = smp_message_get_uint8(message, 0, effect_slot_id);
+    if (ret < 0) {
+        /* should not happen */
+        return ret;
+    }
+
+    for (i = 0; i < n_params; i++) {
+        ret = smp_message_get_uint8(message, i+1, &input_ids[i]);
+        if (ret < 0) {
+            /* should not happen */
+            return ret;
+        }
+    }
+
+    return n_params;
+}
+
+/**
+ * \ingroup message
+ * Initialize a set_input_value message.
+ * Variable argument is a list of input id and input value.
+ * Last input id shall be -1.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the first input value to set
+ * @param[in] input_value the first value to set
+ * @param[in] ... variable argument
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_init_set_input_value(TupMessage *message,
+        int effect_slot_id, int input_id, int input_value, ...)
+{
+    va_list ap;
+    int ret;
+
+    va_start(ap, input_value);
+    ret = tup_message_init_set_input_value_valist(message, effect_slot_id,
+            input_id, input_value, ap);
+    va_end(ap);
+
+    return ret;
+}
+
+/**
+ * \ingroup message
+ * Initialize a set_input_value message using va_list.
+ * Variable argument is a list of input id and input value.
+ * Last input id shall be -1.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the first input value to set
+ * @param[in] input_value the first value to set
+ * @param[in] varargs variable argument
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_init_set_input_value_valist(TupMessage *message,
+        int effect_slot_id, int input_id, int input_value, va_list varargs)
+{
+    int ret;
+    int i;
+
+    smp_message_init(message, TUP_MESSAGE_CMD_SET_INPUT_VALUE);
+
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 1; input_id != -1; i += 2) {
+        ret = smp_message_set_uint8(message, i, input_id);
+        if (ret < 0)
+            return ret;
+
+        ret = smp_message_set_int32(message, i + 1, input_value);
+        if (ret < 0)
+            return ret;
+
+        input_id = va_arg(varargs, int);
+        input_value = va_arg(varargs, int);
+    }
+
+    return 0;
+}
+
+/**
+ * \ingroup message
+ * Initialize a set_input_value message for one input.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] input_id id of the input value to set
+ * @param[in] input_value the value to set
+ */
+void tup_message_init_set_input_value_simple(TupMessage *message,
+        uint8_t effect_slot_id, uint8_t input_id, int input_value)
+{
+    tup_message_init_set_input_value(message, effect_slot_id, input_id,
+            input_value, -1);
+}
+
+/**
+ * \ingroup message
+ * Initialize a set_input_value message from an array of TupInputValueArgs.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] args an array of TupInputArgs
+ * @param[in] n_args the number of args in TupInputValueArgs
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_init_set_input_value_array(TupMessage *message,
+        uint8_t effect_slot_id, TupInputValueArgs *args, size_t n_args)
+{
+    int ret;
+    size_t i, j;
+
+    smp_message_init(message, TUP_MESSAGE_CMD_SET_INPUT_VALUE);
+
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0, j = 1; i < n_args; i++, j += 2) {
+        ret = smp_message_set_uint8(message, j, args[i].input_id);
+        if (ret < 0)
+            return ret;
+
+        ret = smp_message_set_int32(message, j + 1, args[i].input_value);
+        if (ret < 0)
+            return ret;
+    }
+
+    return 0;
+}
+
+/**
+ * \ingroup message
+ * Parse a set_input_value message and store the result in args.
+ *
+ * @param[in] message the TupMessage
+ * @param[out] effect_slot_id id of the effect to update values
+ * @param[out] args pointer to an array of TupInputValueArgs
+ * @param[in] size the size of args array
+ *
+ * @return the number of input value to set on success, a negative errno value
+ * otherwise.
+ */
+int tup_message_parse_set_input_value(TupMessage *message,
+        uint8_t *effect_slot_id, TupInputValueArgs *args, size_t size)
+{
+    int n_params = 0;
+    int ret;
+    int i, j;
+
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_SET_INPUT_VALUE)
+        return -EBADMSG;
+
+    /* we use two args in SmpMessage for one input value */
+    n_params = (smp_message_n_args(message) - 1 ) / 2;
+    if (size < (size_t) n_params)
+        return -ENOMEM;
+
+    ret = smp_message_get_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0, j = 1; i < n_params; i++, j += 2) {
+        ret = smp_message_get_uint8(message, j, &args[i].input_id);
+        if (ret < 0)
+            return ret;
+
+        ret = smp_message_get_int32(message, j + 1, &args[i].input_value);
+        if (ret < 0)
+            return ret;
+    }
+
+    return n_params;
+}
+
+/**
+ * \ingroup message
+ * Initialize an activation internal sensors message.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] state boolean to activate or not the internal sensors
+ */
+void tup_message_init_activate_internal_sensors(TupMessage *message,
+        uint8_t state)
+{
+    smp_message_init(message, TUP_MESSAGE_CMD_ACTIVATE_INTERNAL_SENSORS);
+    smp_message_set_uint8(message, 0, state);
+}
+
+/**
+ * \ingroup message
+ * Parse an activation message.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] state boolean to activate or not the internal sensors
+ * @return 0 on success, a negative errno otherwise
+ */
+int tup_message_parse_activate_internal_sensors(TupMessage *message,
+        uint8_t *state)
+{
+    int msgid = smp_message_get_msgid(message);
+
+    if (msgid != TUP_MESSAGE_CMD_ACTIVATE_INTERNAL_SENSORS)
+        return -EBADMSG;
+
+    return smp_message_get_uint8(message, 0, state);
+}
+
+/**
+ * \ingroup message
  * Initialize a get_buildinfo message.
  *
  * @param[in] message the TupMessage
@@ -1041,6 +1391,86 @@ int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
             return ret;
 
         ret = smp_message_get_uint16(message, j + 1, &args[i].sensor_value);
+        if (ret < 0)
+            return ret;
+    }
+
+    return n_params;
+}
+
+/**
+ * \ingroup message
+ * Initialize a get_input_value response message.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_slot_id id of the effect to update values
+ * @param[in] args an array of TupInputValueArgs
+ * @param[in] n_args the number of elements in args
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_init_resp_input(TupMessage *message, uint8_t effect_slot_id,
+        TupInputValueArgs *args, size_t n_args)
+{
+    int ret;
+    size_t i, j;
+
+    smp_message_init(message, TUP_MESSAGE_RESP_INPUT);
+
+    ret = smp_message_set_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0, j = 1; i < n_args; i++, j += 2) {
+        ret = smp_message_set_uint8(message, j, args[i].input_id);
+        if (ret < 0)
+            return ret;
+
+        ret = smp_message_set_int32(message, j + 1, args[i].input_value);
+        if (ret < 0)
+            return ret;
+    }
+
+    return 0;
+}
+
+/**
+ * \ingroup message
+ * Parse a get_input_value response message.
+ *
+ * @param[in] message the TupMessage
+ * @param[out] effect_slot_id id of the effect to update values
+ * @param[out] args an array of TupInputValueArgs
+ * @param[in] size the size of args array
+ *
+ * @return the number of input value on success, a negative errno value
+ * otherwise.
+ */
+int tup_message_parse_resp_input(TupMessage *message, uint8_t *effect_slot_id,
+        TupInputValueArgs *args, size_t size)
+{
+    int n_params = 0;
+    int ret;
+    int i, j;
+
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_INPUT)
+        return -EBADMSG;
+
+    /* we use two args in SmpMessage for one parameter */
+    n_params = smp_message_n_args(message - 1) / 2;
+    if (size < (size_t) n_params)
+        return -ENOMEM;
+
+    ret = smp_message_get_uint8(message, 0, effect_slot_id);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0, j = 1; i < n_params; i++, j += 2) {
+        ret = smp_message_get_uint8(message, j, &args[i].input_id);
+        if (ret < 0)
+            return ret;
+
+        ret = smp_message_get_int32(message, j + 1, &args[i].input_value);
         if (ret < 0)
             return ret;
     }
