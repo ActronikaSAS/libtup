@@ -175,7 +175,7 @@ static void on_tup_message(TupContext *ctx, TupMessage *message, void *userdata)
             break;
         }
         case TUP_MESSAGE_RESP_INPUT: {
-            int effect_slot_id;
+            uint8_t effect_slot_id;
             TupInputValueArgs args[1];
 
             tup_message_parse_resp_input(message, &effect_slot_id, args,
@@ -401,6 +401,7 @@ static int do_get_input_value(int argc, char *argv[])
         printf("failed to parse arguments\n");
         return -EINVAL;
     }
+    printf("Slot : %d\ninput : %d\n", effect_slot_id, input_id);
 
     tup_message_init_get_input_value_simple(&msg, effect_slot_id, input_id);
     ret = tup_context_send(&tup_ctx, &msg);
@@ -421,6 +422,7 @@ static int do_set_input_value(int argc, char *argv[])
         return -EINVAL;
     }
 
+
     ret = sscanf(argv[0], "%d", &effect_slot_id);
     ret += sscanf(argv[1], "%d", &input_id);
     ret += sscanf(argv[2], "%d", &input_value);
@@ -428,6 +430,7 @@ static int do_set_input_value(int argc, char *argv[])
         printf("failed to parse arguments\n");
         return -EINVAL;
     }
+    printf("Slot : %d\ninput : %d\nvalue : %d\n", effect_slot_id, input_id, input_value);
 
     tup_message_init_set_input_value_simple(&msg, effect_slot_id, input_id,
             input_value);
@@ -450,9 +453,9 @@ static const Command cmds[] = {
     { "bind_effect", "<slot-id> <binding-flags>",
         "bind effect in given slot with actuators (0: unbind)",
         do_bind_effect },
-    { "get_input_value", "<input-id>", "get the value of the given input",
-        do_get_input_value },
-    { "set_input_value", "<input-id> <value>",
+    { "get_input_value", "<effect slot id> <input-id>",
+        "get the value of the given input", do_get_input_value },
+    { "set_input_value", "<effect slot id> <input-id> <value>",
         "set the value of the given input", do_set_input_value },
 };
 
