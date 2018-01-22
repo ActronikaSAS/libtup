@@ -411,7 +411,7 @@ static int do_set_sensor_value(int argc, char *argv[])
     int sensor_value;
     int ret;
 
-    if (argc != 1) {
+    if (argc != 2) {
         printf("'set_sensor_value' arguments: <sensor-id> <value>\n");
         return -EINVAL;
     }
