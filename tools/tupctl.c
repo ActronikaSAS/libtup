@@ -388,7 +388,7 @@ static int do_get_sensor_value(int argc, char *argv[])
     int ret;
 
     if (argc != 1) {
-        printf("'get_sensor_value' arguments: <sensor-id>");
+        printf("'get_sensor_value' arguments: <sensor-id>\n");
         return -EINVAL;
     }
 
@@ -412,7 +412,7 @@ static int do_set_sensor_value(int argc, char *argv[])
     int ret;
 
     if (argc != 1) {
-        printf("'set_sensor_value' arguments: <sensor-id> <value>");
+        printf("'set_sensor_value' arguments: <sensor-id> <value>\n");
         return -EINVAL;
     }
 
@@ -508,7 +508,7 @@ int main(int argc, char *argv[])
     }
 
     if (i == N_ELEMENTS(cmds)) {
-        fprintf(stderr, "command not found");
+        fprintf(stderr, "command not found\n");
         goto done;
         ret = 1;
     }
