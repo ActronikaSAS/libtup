@@ -417,7 +417,7 @@ static int do_set_sensor_value(int argc, char *argv[])
     }
 
     ret = sscanf(argv[0], "%d", &sensor_id);
-    ret += sscanf(argv[0], "%d", &sensor_value);
+    ret += sscanf(argv[1], "%d", &sensor_value);
     if (ret != 2) {
         printf("failed to parse arguments\n");
         return -EINVAL;
