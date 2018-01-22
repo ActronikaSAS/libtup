@@ -509,8 +509,8 @@ int main(int argc, char *argv[])
 
     if (i == N_ELEMENTS(cmds)) {
         fprintf(stderr, "command not found\n");
-        goto done;
         ret = 1;
+        goto done;
     }
 
     if (ret < 0)
