@@ -898,6 +898,39 @@ int tup_message_parse_set_input_value(TupMessage *message,
 
 /**
  * \ingroup message
+ * Initialize an activation internal sensors message.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] state boolean to activate or not the internal sensors
+ */
+void tup_message_init_activate_internal_sensors(TupMessage *message,
+        uint8_t state)
+{
+    smp_message_init(message, TUP_MESSAGE_CMD_ACTIVATE_INTERNAL_SENSORS);
+    smp_message_set_uint8(message, 0, state);
+}
+
+/**
+ * \ingroup message
+ * Parse an activation message.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] state boolean to activate or not the internal sensors
+ * @return 0 on success, a negative errno otherwise
+ */
+int tup_message_parse_activate_internal_sensors(TupMessage *message,
+        uint8_t *state)
+{
+    int msgid = smp_message_get_msgid(message);
+
+    if (msgid != TUP_MESSAGE_CMD_ACTIVATE_INTERNAL_SENSORS)
+        return -EBADMSG;
+
+    return smp_message_get_uint8(message, 0, state);
+}
+
+/**
+ * \ingroup message
  * Initialize a get_buildinfo message.
  *
  * @param[in] message the TupMessage

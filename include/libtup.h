@@ -85,6 +85,7 @@ typedef enum
     TUP_MESSAGE_CMD_GET_INPUT_VALUE = 17,
     TUP_MESSAGE_CMD_SET_INPUT_VALUE = 18,
     TUP_MESSAGE_CMD_GET_BUILDINFO = 19,
+    TUP_MESSAGE_CMD_ACTIVATE_INTERNAL_SENSORS = 20,
 
     TUP_MESSAGE_RESP_VERSION = 100,
     TUP_MESSAGE_RESP_PARAMETER = 101,
@@ -224,6 +225,11 @@ int tup_message_parse_set_input_value(TupMessage *message,
         uint8_t *effect_slot_id, TupInputValueArgs *args, size_t size);
 
 void tup_message_init_get_buildinfo(TupMessage *message);
+
+void tup_message_init_activate_internal_sensors(TupMessage *message,
+        uint8_t state);
+int tup_message_parse_activate_internal_sensors(TupMessage *message,
+        uint8_t *state);
 
 void tup_message_init_resp_version(TupMessage *message, const char *version);
 int tup_message_parse_resp_version(TupMessage *message, const char **version);
