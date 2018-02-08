@@ -147,3 +147,10 @@ for (i = 0; i < 5 && !ack_received; i++) {
     sleep(1);
 }
 ```
+
+## Notes about Arduino
+
+It is possible to export this library for the Arduino IDE. To perform the
+export, please run the python script `export-arduino-lib.py` located in the
+`scripts` subfolder with python 3 (or higher). Then you can import the resulting
+zip file into your Arduino IDE.
