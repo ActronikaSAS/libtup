@@ -11,7 +11,7 @@ import argparse
 OUTPUT_NAME = "libtup.zip"  # default name
 
 # directories copied as-is with their tree
-INCLUDED_DIRS = ["docs"]
+INCLUDED_DIRS = ["docs", "examples/libtup_arduino_example"]
 
 # directories from which we copy all the files and put them at the root
 EXTRACTED_DIRS = ["include", "src"]
