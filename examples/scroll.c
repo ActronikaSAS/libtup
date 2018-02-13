@@ -3,8 +3,6 @@
 #include <libtup.h>
 
 #define EFFECT_ID_SCROLL 6
-#define SENSOR_ID_Y1 3
-#define SENSOR_ID_N_FINGERS 18
 
 static void on_new_message(TupContext *ctx, TupMessage *message, void *userdata)
 {
@@ -52,15 +50,15 @@ int main(int argc, char *argv[])
 
     tup_message_clear(&msg);
 
-    tup_message_init_set_sensor_value(&msg, SENSOR_ID_N_FINGERS, 2, -1);
+    tup_message_init_set_input_value(&msg, 0, 1, 2, -1);
     ret = tup_context_send(&ctx, &msg);
     if (ret < 0)
         goto send_fail;
 
-    tup_message_clear(&msg);
+    tup_message_clear:(&msg);
 
     for (i = 0; i < 1000; i++) {
-        tup_message_init_set_sensor_value(&msg, SENSOR_ID_Y1, i, -1);
+        tup_message_init_set_input_value(&msg, 0, 0, i, -1);
         ret = tup_context_send(&ctx, &msg);
         if (ret < 0)
             goto send_fail;
