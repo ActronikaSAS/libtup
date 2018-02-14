@@ -14,10 +14,12 @@ Message list and ids:
     16 - BIND_EFFECT
     17 - GET_SENSOR_VALUE
     18 - SET_SENSOR_VALUE
+    19 - GET_BUILDINFO
 
     100 - RESP_VERSION
     101 - RESP_PARAMETER
     102 - RESP_SENSOR
+    103 - RESP_BUILDINFO
 
 
 ACK Message:
@@ -175,6 +177,16 @@ SET_SENSOR_VALUE:
     expected response:
         ACK, ERROR
 
+GET_BUILDINFO:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Retrieve the hash of the firmware components
+
+    arguments:
+        none
+
 RESP_VERSION:
     direction:
         Tactronik --> Client
@@ -213,3 +225,13 @@ RESP_SENSOR:
         uint8_t - id of the second requested sensor
         uint16_t - value of the second requested sensor
         ...
+
+RESP_BUILDINFO:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Response to a GET_BUILDINFO which contains the firmware components hashs
+
+    arguments:
+        string - firmware components hash
