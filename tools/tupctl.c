@@ -182,6 +182,16 @@ static void on_tup_message(TupContext *ctx, TupMessage *message, void *userdata)
                     args[0].sensor_value);
             break;
         }
+        case TUP_MESSAGE_RESP_INPUT: {
+            uint8_t effect_slot_id;
+            TupInputValueArgs args[1];
+
+            tup_message_parse_resp_input(message, &effect_slot_id, args,
+                    N_ELEMENTS(args));
+            printf("input %d of effect %d have value %d\n", args[0].input_id,
+                    effect_slot_id, args[0].input_value);
+            break;
+        }
         case TUP_MESSAGE_RESP_BUILDINFO: {
             const char *buildinfo;
 
@@ -429,6 +439,99 @@ static int do_set_sensor_value(int argc, char *argv[])
     return ret;
 }
 
+static int do_get_input_value(int argc, char *argv[])
+{
+    TupMessage msg;
+    int effect_slot_id;
+    int input_id;
+    int ret;
+
+    if (argc != 2) {
+        printf("'get_input_value' arguments: <effect slot id> <input-id>\n");
+        return -EINVAL;
+    }
+
+    ret = sscanf(argv[0], "%d", &effect_slot_id);
+    ret += sscanf(argv[1], "%d", &input_id);
+    if (ret != 2) {
+        printf("failed to parse arguments\n");
+        return -EINVAL;
+    }
+    printf("Slot : %d\ninput : %d\n", effect_slot_id, input_id);
+
+    tup_message_init_get_input_value_simple(&msg, effect_slot_id, input_id);
+    ret = tup_context_send(&tup_ctx, &msg);
+    tup_message_clear(&msg);
+    return ret;
+}
+
+static int do_set_input_value(int argc, char *argv[])
+{
+    TupMessage msg;
+    int effect_slot_id;
+    int input_id;
+    int input_value;
+    int ret;
+
+    if (argc != 3) {
+        printf("'set_input_value' arguments: <effect slot id> <input-id> <value>\n");
+        return -EINVAL;
+    }
+
+
+    ret = sscanf(argv[0], "%d", &effect_slot_id);
+    ret += sscanf(argv[1], "%d", &input_id);
+    ret += sscanf(argv[2], "%d", &input_value);
+    if (ret != 3) {
+        printf("failed to parse arguments\n");
+        return -EINVAL;
+    }
+    printf("Slot : %d\ninput : %d\nvalue : %d\n", effect_slot_id, input_id, input_value);
+
+    tup_message_init_set_input_value_simple(&msg, effect_slot_id, input_id,
+            input_value);
+    ret = tup_context_send(&tup_ctx, &msg);
+    tup_message_clear(&msg);
+    return ret;
+}
+
+static int do_activate_internal_sensors(int argc, char *argv[])
+{
+    TupMessage msg;
+    int state_activation;
+    int ret;
+
+    if (argc != 1) {
+        printf("'activate_internal_sensors' arguments : <state active>");
+        return -EINVAL;
+    }
+
+    ret = sscanf(argv[0], "%d", &state_activation);
+    if (ret != 1) {
+        printf("failed to parse arguments\n");
+        return -EINVAL;
+    }
+    switch(state_activation) {
+        case 0:
+            printf("deactivate internal sensors \n");
+            break;
+        case 1:
+            printf("activate internal sensors\n");
+            break;
+        default:
+            printf("Internal Sensors : Unknown value\n");
+            goto error;
+            break;
+    }
+    tup_message_init_activate_internal_sensors(&msg, state_activation);
+    ret = tup_context_send(&tup_ctx, &msg);
+    tup_message_clear(&msg);
+    return ret;
+
+error:
+    return -EINVAL;
+}
+
 static const Command cmds[] = {
     { "load", "<slot-id> <effect-id>", "load given effect in slot", do_load },
     { "play", "<slot-id>", "play the effect in given slot", do_play },
@@ -447,6 +550,13 @@ static const Command cmds[] = {
         do_get_sensor_value },
     { "set_sensor_value", "<sensor-id> <value>",
         "set the value of the given sensor", do_set_sensor_value },
+    { "get_input_value", "<effect slot id> <input-id>",
+        "get the value of the given input", do_get_input_value },
+    { "set_input_value", "<effect slot id> <input-id> <value>",
+        "set the value of the given input", do_set_input_value },
+    { "activate_sensors", "<state>",
+        "Activate (1) or not (0) the management of internal sensors",
+        do_activate_internal_sensors},
 };
 
 static const Option options[] = {
