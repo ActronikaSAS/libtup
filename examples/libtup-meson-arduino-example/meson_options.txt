@@ -1,0 +1,11 @@
+option('programmer',
+    type: 'combo',
+    choices: ['arduino', 'isp-v2', 'usbasp', 'usbtiny'],
+    value : 'arduino')
+option('baudrate',
+    type: 'combo',
+    choices: ['1200', '2400', '4800', '9600', '19200', '38400', '57600', '115200'],
+    value : '115200')
+option('serial-port',
+    type: 'string',
+    value : '/dev/ttyACM0')
