@@ -295,7 +295,7 @@ RESP_INPUT:
     arguments:
         uint8_t - slot of the effect
         uint8_t - id of the first requested input
-        uint16_t - value of the first requested input
+        int32_t - value of the first requested input
         uint8_t - id of the second requested input
-        uint16_t - value of the second requested input
+        int32_t - value of the second requested input
         ...
