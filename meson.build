@@ -36,8 +36,15 @@ libtup_src = [
 
 libtup_incdir = include_directories(['include'])
 
+libtup_flags = []
+if get_option('default_library') == 'shared'
+  libtup_flags += '-DTUP_EXPORT_API'
+endif
+
 libtup = library('tup', libtup_src,
     include_directories : [libtup_incdir],
+    c_args : libtup_flags,
+    cpp_args : libtup_flags,
     dependencies : [libsmp_dep])
 
 libtup_dep = declare_dependency(link_with : libtup,

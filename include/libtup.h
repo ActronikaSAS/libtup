@@ -30,6 +30,17 @@
 extern "C" {
 #endif
 
+/* Use to declare public API */
+#ifdef TUP_EXPORT_API
+#   ifdef _WIN32
+#       define TUP_API __declspec(dllexport)
+#   else
+#       define TUP_API __attribute__((visibility("default")))
+#   endif
+#else
+#   define TUP_API
+#endif
+
 typedef SmpMessage TupMessage;
 typedef struct TupContext TupContext;
 
@@ -53,17 +64,18 @@ struct TupContext
     void *userdata;
 };
 
-int tup_context_init(TupContext *ctx, const char *device, TupCallbacks *cbs,
-        void *userdata);
-void tup_context_clear(TupContext *ctx);
+TUP_API int tup_context_init(TupContext *ctx, const char *device,
+                TupCallbacks *cbs, void *userdata);
+TUP_API void tup_context_clear(TupContext *ctx);
 
-int tup_context_set_config(TupContext *ctx, SmpSerialFrameBaudrate baudrate,
-        SmpSerialFrameParity parity, int flow_control);
+TUP_API int tup_context_set_config(TupContext *ctx,
+                SmpSerialFrameBaudrate baudrate, SmpSerialFrameParity parity,
+                int flow_control);
 
-intptr_t tup_context_get_fd(TupContext *ctx);
+TUP_API intptr_t tup_context_get_fd(TupContext *ctx);
 
-int tup_context_send(TupContext *ctx, TupMessage *msg);
-int tup_context_process_fd(TupContext *ctx);
+TUP_API int tup_context_send(TupContext *ctx, TupMessage *msg);
+TUP_API int tup_context_process_fd(TupContext *ctx);
 
 /* TupMessage API */
 
@@ -164,128 +176,135 @@ typedef enum
 #define TUP_BINDING_FLAG_BOTH (TUP_BINDING_FLAG_1 | TUP_BINDING_FLAG_2)
 
 /* TUP messages */
-void tup_message_clear(TupMessage *message);
+TUP_API void tup_message_clear(TupMessage *message);
 
-void tup_message_init_ack(TupMessage *message, TupMessageType cmd);
-int tup_message_parse_ack(TupMessage *message, TupMessageType *cmd);
+TUP_API void tup_message_init_ack(TupMessage *message, TupMessageType cmd);
+TUP_API int tup_message_parse_ack(TupMessage *message, TupMessageType *cmd);
 
-void tup_message_init_error(TupMessage *message, TupMessageType cmd,
-        uint32_t error);
-int tup_message_parse_error(TupMessage *message, TupMessageType *cmd,
-        uint32_t *error);
+TUP_API void tup_message_init_error(TupMessage *message, TupMessageType cmd,
+                uint32_t error);
+TUP_API int tup_message_parse_error(TupMessage *message, TupMessageType *cmd,
+                uint32_t *error);
 
-void tup_message_init_load(TupMessage *message, uint8_t effect_id,
-        uint16_t bank_id);
-int tup_message_parse_load(TupMessage *message, uint8_t *effect_id,
-        uint16_t *bank_id);
+TUP_API void tup_message_init_load(TupMessage *message, uint8_t effect_id,
+                uint16_t bank_id);
+TUP_API int tup_message_parse_load(TupMessage *message, uint8_t *effect_id,
+                uint16_t *bank_id);
 
-void tup_message_init_play(TupMessage *message, uint8_t effect_id);
-int tup_message_parse_play(TupMessage *message, uint8_t *effect_id);
+TUP_API void tup_message_init_play(TupMessage *message, uint8_t effect_id);
+TUP_API int tup_message_parse_play(TupMessage *message, uint8_t *effect_id);
 
-void tup_message_init_stop(TupMessage *message, uint8_t effect_id);
-int tup_message_parse_stop(TupMessage *message, uint8_t *effect_id);
+TUP_API void tup_message_init_stop(TupMessage *message, uint8_t effect_id);
+TUP_API int tup_message_parse_stop(TupMessage *message, uint8_t *effect_id);
 
-void tup_message_init_get_version(TupMessage *message);
+TUP_API void tup_message_init_get_version(TupMessage *message);
 
-int tup_message_init_get_parameter(TupMessage *message, uint8_t effect_id,
-        int parameter_id, ...);
-int tup_message_init_get_parameter_valist(TupMessage *message,
-        uint8_t effect_id, int parameter_id, va_list varargs);
-void tup_message_init_get_parameter_simple(TupMessage *message,
-        uint8_t effect_id, uint8_t parameter_id);
-int tup_message_init_get_parameter_array(TupMessage *message,
-        uint8_t effect_id, uint8_t *parameter_ids, size_t n_parameters);
-int tup_message_parse_get_parameter(TupMessage *message, uint8_t *effect_id,
-       uint8_t *parameter_ids, size_t size);
+TUP_API int tup_message_init_get_parameter(TupMessage *message,
+                uint8_t effect_id, int parameter_id, ...);
+TUP_API int tup_message_init_get_parameter_valist(TupMessage *message,
+                uint8_t effect_id, int parameter_id, va_list varargs);
+TUP_API void tup_message_init_get_parameter_simple(TupMessage *message,
+                uint8_t effect_id, uint8_t parameter_id);
+TUP_API int tup_message_init_get_parameter_array(TupMessage *message,
+                uint8_t effect_id, uint8_t *parameter_ids, size_t n_parameters);
+TUP_API int tup_message_parse_get_parameter(TupMessage *message,
+                uint8_t *effect_id, uint8_t *parameter_ids, size_t size);
 
-int tup_message_init_set_parameter(TupMessage *message, uint8_t effect_id,
-        int parameter_id, uint32_t parameter_value, ...);
-int tup_message_init_set_parameter_valist(TupMessage *message,
-        uint8_t effect_id, int parameter_id, uint32_t parameter_value,
-        va_list varargs);
-void tup_message_init_set_parameter_simple(TupMessage *message,
-        uint8_t effect_id, uint8_t parameter_id, uint32_t parameter_value);
-int tup_message_init_set_parameter_array(TupMessage *message,
-        uint8_t effect_id, TupParameterArgs *params, size_t n_params);
-int tup_message_parse_set_parameter(TupMessage *message,
-        uint8_t *effect_id, TupParameterArgs *params, size_t size);
+TUP_API int tup_message_init_set_parameter(TupMessage *message,
+                uint8_t effect_id, int parameter_id, uint32_t parameter_value,
+                ...);
+TUP_API int tup_message_init_set_parameter_valist(TupMessage *message,
+                uint8_t effect_id, int parameter_id, uint32_t parameter_value,
+                va_list varargs);
+TUP_API void tup_message_init_set_parameter_simple(TupMessage *message,
+                uint8_t effect_id, uint8_t parameter_id,
+                uint32_t parameter_value);
+TUP_API int tup_message_init_set_parameter_array(TupMessage *message,
+                uint8_t effect_id, TupParameterArgs *params, size_t n_params);
+TUP_API int tup_message_parse_set_parameter(TupMessage *message,
+                uint8_t *effect_id, TupParameterArgs *params, size_t size);
 
-void tup_message_init_bind_effect(TupMessage *message, uint8_t effect_id,
-        unsigned int binding_flags);
-int tup_message_parse_bind_effect(TupMessage *message, uint8_t *effect_id,
-        unsigned int *binding_flags);
+TUP_API void tup_message_init_bind_effect(TupMessage *message,
+                uint8_t effect_id, unsigned int binding_flags);
+TUP_API int tup_message_parse_bind_effect(TupMessage *message,
+                uint8_t *effect_id, unsigned int *binding_flags);
 
-int tup_message_init_get_sensor_value(TupMessage *message, int sensor_id, ...);
-int tup_message_init_get_sensor_value_valist(TupMessage *message, int sensor_id,
-        va_list varargs);
-void tup_message_init_get_sensor_value_simple(TupMessage *message,
-        uint8_t sensor_id);
-int tup_message_init_get_sensor_value_array(TupMessage *message,
-        uint8_t *sensor_ids, size_t n_sensors);
-int tup_message_parse_get_sensor_value(TupMessage *message,
-        uint8_t *sensor_ids, size_t size);
+TUP_API int tup_message_init_get_sensor_value(TupMessage *message,
+                int sensor_id, ...);
+TUP_API int tup_message_init_get_sensor_value_valist(TupMessage *message,
+                int sensor_id, va_list varargs);
+TUP_API void tup_message_init_get_sensor_value_simple(TupMessage *message,
+                uint8_t sensor_id);
+TUP_API int tup_message_init_get_sensor_value_array(TupMessage *message,
+                uint8_t *sensor_ids, size_t n_sensors);
+TUP_API int tup_message_parse_get_sensor_value(TupMessage *message,
+                uint8_t *sensor_ids, size_t size);
 
-int tup_message_init_set_sensor_value(TupMessage *message, int sensor_id,
-        int sensor_value, ...);
-int tup_message_init_set_sensor_value_valist(TupMessage *message, int sensor_id,
-        int sensor_value, va_list varargs);
-void tup_message_init_set_sensor_value_simple(TupMessage *message,
-        int sensor_id, uint16_t sensor_value);
-int tup_message_init_set_sensor_value_array(TupMessage *message,
-        TupSensorValueArgs *args, size_t n_args);
-int tup_message_parse_set_sensor_value(TupMessage *message,
-        TupSensorValueArgs *args, size_t size);
+TUP_API int tup_message_init_set_sensor_value(TupMessage *message,
+                int sensor_id, int sensor_value, ...);
+TUP_API int tup_message_init_set_sensor_value_valist(TupMessage *message,
+                int sensor_id, int sensor_value, va_list varargs);
+TUP_API void tup_message_init_set_sensor_value_simple(TupMessage *message,
+                int sensor_id, uint16_t sensor_value);
+TUP_API int tup_message_init_set_sensor_value_array(TupMessage *message,
+                TupSensorValueArgs *args, size_t n_args);
+TUP_API int tup_message_parse_set_sensor_value(TupMessage *message,
+                TupSensorValueArgs *args, size_t size);
 
-int tup_message_init_get_input_value(TupMessage *message,
-        int effect_slot_id, int input_id, ...);
-int tup_message_init_get_input_value_valist(TupMessage *message,
-        int effect_slot_id, int input_id, va_list varargs);
-void tup_message_init_get_input_value_simple(TupMessage *message,
-        uint8_t effect_slot_id, uint8_t input_id);
-int tup_message_init_get_input_value_array(TupMessage *message,
-        uint8_t effect_slot_id, uint8_t *input_ids, size_t n_inputs);
-int tup_message_parse_get_input_value(TupMessage *message,
-        uint8_t *effect_slot_id, uint8_t *input_ids, size_t size);
+TUP_API int tup_message_init_get_input_value(TupMessage *message,
+                int effect_slot_id, int input_id, ...);
+TUP_API int tup_message_init_get_input_value_valist(TupMessage *message,
+                int effect_slot_id, int input_id, va_list varargs);
+TUP_API void tup_message_init_get_input_value_simple(TupMessage *message,
+                uint8_t effect_slot_id, uint8_t input_id);
+TUP_API int tup_message_init_get_input_value_array(TupMessage *message,
+                uint8_t effect_slot_id, uint8_t *input_ids, size_t n_inputs);
+TUP_API int tup_message_parse_get_input_value(TupMessage *message,
+                uint8_t *effect_slot_id, uint8_t *input_ids, size_t size);
 
-int tup_message_init_set_input_value(TupMessage *message,
-        int effect_slot_id, int input_id, int input_value, ...);
-int tup_message_init_set_input_value_valist(TupMessage *message,
-        int effect_slot_id, int input_id, int input_value, va_list varargs);
-void tup_message_init_set_input_value_simple(TupMessage *message,
-        uint8_t effect_slot_id, uint8_t input_id, int input_value);
-int tup_message_init_set_input_value_array(TupMessage *message,
-        uint8_t effect_slot_id, TupInputValueArgs *args, size_t n_args);
-int tup_message_parse_set_input_value(TupMessage *message,
-        uint8_t *effect_slot_id, TupInputValueArgs *args, size_t size);
+TUP_API int tup_message_init_set_input_value(TupMessage *message,
+                int effect_slot_id, int input_id, int input_value, ...);
+TUP_API int tup_message_init_set_input_value_valist(TupMessage *message,
+                int effect_slot_id, int input_id, int input_value,
+                va_list varargs);
+TUP_API void tup_message_init_set_input_value_simple(TupMessage *message,
+                uint8_t effect_slot_id, uint8_t input_id, int input_value);
+TUP_API int tup_message_init_set_input_value_array(TupMessage *message,
+                uint8_t effect_slot_id, TupInputValueArgs *args, size_t n_args);
+TUP_API int tup_message_parse_set_input_value(TupMessage *message,
+                uint8_t *effect_slot_id, TupInputValueArgs *args, size_t size);
 
-void tup_message_init_get_buildinfo(TupMessage *message);
+TUP_API void tup_message_init_get_buildinfo(TupMessage *message);
 
-void tup_message_init_activate_internal_sensors(TupMessage *message,
-        uint8_t state);
-int tup_message_parse_activate_internal_sensors(TupMessage *message,
-        uint8_t *state);
+TUP_API void tup_message_init_activate_internal_sensors(TupMessage *message,
+                uint8_t state);
+TUP_API int tup_message_parse_activate_internal_sensors(TupMessage *message,
+                uint8_t *state);
 
-void tup_message_init_resp_version(TupMessage *message, const char *version);
-int tup_message_parse_resp_version(TupMessage *message, const char **version);
+TUP_API void tup_message_init_resp_version(TupMessage *message,
+                const char *version);
+TUP_API int tup_message_parse_resp_version(TupMessage *message,
+                const char **version);
 
-int tup_message_init_resp_parameter(TupMessage *message, uint8_t effect_id,
-        TupParameterArgs *args, size_t n_args);
-int tup_message_parse_resp_parameter(TupMessage *message, uint8_t *effect_id,
-        TupParameterArgs *args, size_t size);
+TUP_API int tup_message_init_resp_parameter(TupMessage *message,
+                uint8_t effect_id, TupParameterArgs *args, size_t n_args);
+TUP_API int tup_message_parse_resp_parameter(TupMessage *message,
+                uint8_t *effect_id, TupParameterArgs *args, size_t size);
 
-int tup_message_init_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
-        size_t n_args);
-int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
-        size_t size);
+TUP_API int tup_message_init_resp_sensor(TupMessage *message,
+                TupSensorValueArgs *args, size_t n_args);
+TUP_API int tup_message_parse_resp_sensor(TupMessage *message,
+                TupSensorValueArgs *args, size_t size);
 
-int tup_message_init_resp_input(TupMessage *message, uint8_t effect_slot_id,
-        TupInputValueArgs *args, size_t n_args);
-int tup_message_parse_resp_input(TupMessage *message, uint8_t *effect_slot_id,
-        TupInputValueArgs *args, size_t size);
+TUP_API int tup_message_init_resp_input(TupMessage *message,
+                uint8_t effect_slot_id, TupInputValueArgs *args, size_t n_args);
+TUP_API int tup_message_parse_resp_input(TupMessage *message,
+                uint8_t *effect_slot_id, TupInputValueArgs *args, size_t size);
 
-void tup_message_init_resp_buildinfo(TupMessage *message, const char *buildinfo);
-int tup_message_parse_resp_buildinfo(TupMessage *message,
-        const char **buildinfo);
+TUP_API void tup_message_init_resp_buildinfo(TupMessage *message,
+                const char *buildinfo);
+TUP_API int tup_message_parse_resp_buildinfo(TupMessage *message,
+                const char **buildinfo);
 
 #ifdef __cplusplus
 }
