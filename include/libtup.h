@@ -64,6 +64,10 @@ struct TupContext
     void *userdata;
 };
 
+TUP_API TupContext *tup_context_new(const char *device, TupCallbacks *cbs,
+                void *userdata);
+TUP_API void tup_context_free(TupContext *ctx);
+
 TUP_API int tup_context_init(TupContext *ctx, const char *device,
                 TupCallbacks *cbs, void *userdata);
 TUP_API void tup_context_clear(TupContext *ctx);
@@ -177,6 +181,10 @@ typedef enum
 #define TUP_BINDING_FLAG_BOTH (TUP_BINDING_FLAG_1 | TUP_BINDING_FLAG_2)
 
 /* TUP messages */
+TUP_API TupMessage *tup_message_new(void);
+TUP_API void tup_message_free(TupMessage *message);
+TUP_API TupMessageType tup_message_get_type(TupMessage *message);
+
 TUP_API void tup_message_clear(TupMessage *message);
 
 TUP_API void tup_message_init_ack(TupMessage *message, TupMessageType cmd);

@@ -21,6 +21,7 @@
 
 #include "libtup.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include "libtup-private.h"
 
 static void on_sf_new_frame(uint8_t *frame, size_t size, void *userdata)
@@ -44,6 +45,47 @@ static void on_sf_error(SmpSerialFrameError error, void *userdata)
 }
 
 /* API */
+
+/**
+ * \ingroup context
+ * Create an initialize a new TupContext
+ *
+ * @param[in] device path to the serial device to use
+ * @param[in] cbs pointer to a callback structure
+ * @param[in] userdata userdata to pass in callbacks
+ *
+ * @return a TupContext on success, NULL otherwise.
+ */
+TupContext *tup_context_new(const char *device, TupCallbacks *cbs,
+        void *userdata)
+{
+    TupContext *ctx;
+    int ret;
+
+    ctx = calloc(1, sizeof(*ctx));
+    if (ctx == NULL)
+        return NULL;
+
+    ret = tup_context_init(ctx, device, cbs, userdata);
+    if (ret < 0) {
+        free(ctx);
+        return NULL;
+    }
+
+    return ctx;
+}
+
+/**
+ * \ingroup context
+ * Free a TupContext.
+ *
+ * @param[in] ctx the TupContext to free
+ */
+void tup_context_free(TupContext *ctx)
+{
+    tup_context_clear(ctx);
+    free(ctx);
+}
 
 /**
  * \ingroup context

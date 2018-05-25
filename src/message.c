@@ -24,7 +24,32 @@
 #include "libtup.h"
 #include <errno.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include "libtup-private.h"
+
+/**
+ * \ingroup message
+ * Create a new TupMessage. Message shall be inititialize afterward
+ *
+ * @return a new TupMessage or NULL on error.
+ */
+TupMessage *tup_message_new()
+{
+    TupMessage *msg;
+
+    return calloc(1, sizeof(*msg));
+}
+
+/**
+ * \ingroup message
+ * Free a previously allocated TupMessage.
+ *
+ * @param[in] message the TupMessage.
+ */
+void tup_message_free(TupMessage *message)
+{
+    free(message);
+}
 
 /**
  * \ingroup message
@@ -35,6 +60,19 @@
 void tup_message_clear(TupMessage *message)
 {
     smp_message_clear(message);
+}
+
+/**
+ * \ingroup message
+ * Get the type of a TupMessage.
+ *
+ * @param[in] message the TupMessage
+ *
+ * @return the message type as a TupMessageType.
+ */
+TupMessageType tup_message_get_type(TupMessage *message)
+{
+    return TUP_MESSAGE_TYPE(message);
 }
 
 /**
