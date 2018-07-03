@@ -22,6 +22,7 @@
 #include "libtup.h"
 #include <stdio.h>
 #include "libtup-private.h"
+#include "libtup-config.h"
 
 static void on_sf_new_frame(uint8_t *frame, size_t size, void *userdata)
 {
@@ -123,7 +124,7 @@ intptr_t tup_context_get_fd(TupContext *ctx)
  */
 int tup_context_send(TupContext *ctx, TupMessage *msg)
 {
-    uint8_t buf[512];
+    uint8_t buf[TUP_CONTEXT_BUFFER_SIZE];
     int ret;
 
     ret = smp_message_encode(msg, buf, sizeof(buf));

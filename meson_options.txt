@@ -1,0 +1,2 @@
+option('tup-context-buffer-size', type : 'string', value : '512',
+        description : 'The maximum context size in bytes')

@@ -34,6 +34,16 @@ libtup_src = [
     'src/message.c',
     ]
 
+## Public config file
+cdata = configuration_data()
+
+cdata.set('TUP_CONTEXT_BUFFER_SIZE',
+    get_option('tup-context-buffer-size').to_int(),
+    description : 'The maximum context size in bytes')
+
+configure_file(output : 'libtup-config.h',
+    configuration : cdata)
+
 libtup_incdir = include_directories(['include'])
 
 libtup_flags = []
