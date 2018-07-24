@@ -27,7 +27,7 @@ if meson.get_compiler('c').get_id() == 'gcc'
       ], language : 'c')
 endif
 
-libsmp_dep = subproject('libsmp').get_variable('libsmp_dep')
+libsmp_dep = dependency('libsmp', fallback: [ 'libsmp', 'libsmp_dep'])
 
 libtup_src = [
     'src/context.c',
