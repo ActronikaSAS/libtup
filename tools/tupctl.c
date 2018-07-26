@@ -92,52 +92,6 @@ static void print_cmdline_options(const Option *options, size_t n_options)
     }
 }
 
-/* Platform dependent loop implementation */
-#if defined(_WIN32) || defined(_WIN64)
-static int wait_and_process(TupContext *ctx, int timeout_ms)
-{
-    int ret;
-
-    ret = WaitForSingleObject((HANDLE) tup_context_get_fd(ctx), timeout_ms);
-    switch (ret) {
-        case WAIT_OBJECT_0:
-            ret = tup_context_process_fd(ctx);
-            break;
-        case WAIT_TIMEOUT:
-            ret = -ETIMEDOUT;
-            break;
-        case WAIT_ABANDONED:
-        case WAIT_FAILED:
-        default:
-            ret = -EFAULT;
-            break;
-    }
-
-    return ret;
-}
-#else
-static int wait_and_process(TupContext *ctx, int timeout_ms)
-{
-    struct pollfd pfd;
-    int ret;
-
-    pfd.fd = tup_context_get_fd(ctx);
-    pfd.events = POLLIN;
-    pfd.revents = 0;
-
-    ret = poll(&pfd, 1, timeout_ms);
-    if (ret < 0) {
-        ret = -EFAULT;
-    } else if (ret == 0) {
-        ret = -ETIMEDOUT;
-    } else {
-        ret = tup_context_process_fd(ctx);
-    }
-
-    return ret;
-}
-#endif
-
 /* some globals variables */
 static TupContext tup_ctx;
 static int response_recv;
@@ -629,7 +583,7 @@ int main(int argc, char *argv[])
     /* wait for a response message */
     response_recv = 0;
     while (!response_recv) {
-        ret = wait_and_process(&tup_ctx, 2000);
+        ret = tup_context_wait_and_process(&tup_ctx, 2000);
         if (ret < 0) {
             if (ret == -ETIMEDOUT)
                 printf("timeout while waiting for response\n");
