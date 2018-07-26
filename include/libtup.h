@@ -76,6 +76,7 @@ TUP_API intptr_t tup_context_get_fd(TupContext *ctx);
 
 TUP_API int tup_context_send(TupContext *ctx, TupMessage *msg);
 TUP_API int tup_context_process_fd(TupContext *ctx);
+TUP_API int tup_context_wait_and_process(TupContext *ctx, int timeout_ms);
 
 /* TupMessage API */
 

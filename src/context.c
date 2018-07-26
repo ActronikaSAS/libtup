@@ -146,3 +146,18 @@ int tup_context_process_fd(TupContext *ctx)
 {
     return smp_serial_frame_process_recv_fd(&ctx->sf_ctx);
 }
+
+/**
+ * \ingroup context
+ * Wait and process event data.
+ *
+ * @param[in] ctx the TupContext
+ * @param[in] timeout_ms a timeout in milliseconds. A negative value means no
+ *                       timeout
+ *
+ * @return 0 on success, a negativer errno otherwise.
+ */
+int tup_context_wait_and_process(TupContext *ctx, int timeout_ms)
+{
+    return smp_serial_frame_wait_and_process(&ctx->sf_ctx, timeout_ms);
+}
