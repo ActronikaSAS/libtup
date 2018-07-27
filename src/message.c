@@ -1457,7 +1457,7 @@ int tup_message_parse_resp_input(TupMessage *message, uint8_t *effect_slot_id,
         return -EBADMSG;
 
     /* we use two args in SmpMessage for one parameter */
-    n_params = smp_message_n_args(message - 1) / 2;
+    n_params = (smp_message_n_args(message) - 1) / 2;
     if (size < (size_t) n_params)
         return -ENOMEM;
 
