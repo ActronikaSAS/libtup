@@ -9,11 +9,6 @@
 #include <errno.h>
 #include <libtup.h>
 
-#if defined(HAVE_POLL)
-#include <poll.h>
-#include <unistd.h>
-#endif
-
 #define N_ELEMENTS(arr) (sizeof((arr)) / sizeof((arr)[0]))
 
 static void print_help_and_exit(void);
