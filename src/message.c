@@ -35,9 +35,25 @@
  */
 TupMessage *tup_message_new()
 {
-    TupMessage *msg;
+    return smp_message_new();
+}
 
-    return calloc(1, sizeof(*msg));
+/**
+ * \ingroup context
+ * Create a new TupMessage object from a static storage.
+ * @warning for now the TupMessage is only a typedef of SmpMessage so you can
+ * pass NULL and 0 for smsg an struct_size repectively.
+ *
+ * @param[in] smsg a TupStaticMessage (not used)
+ * @param[in] struct_size the size of smsg (not used)
+ * @param[in] smp_msg a SmpMessage to use
+ *
+ * @return a SmpContext or NULL on error.
+ */
+TupMessage *tup_message_new_from_static(TupStaticMessage *smsg,
+        size_t struct_size, SmpMessage *smp_msg)
+{
+    return smp_msg;
 }
 
 /**
@@ -48,7 +64,7 @@ TupMessage *tup_message_new()
  */
 void tup_message_free(TupMessage *message)
 {
-    free(message);
+    return smp_message_free(message);
 }
 
 /**
@@ -72,7 +88,7 @@ void tup_message_clear(TupMessage *message)
  */
 TupMessageType tup_message_get_type(TupMessage *message)
 {
-    return TUP_MESSAGE_TYPE(message);
+    return smp_message_get_msgid(message);
 }
 
 /**
@@ -84,7 +100,7 @@ TupMessageType tup_message_get_type(TupMessage *message)
  */
 void tup_message_init_ack(TupMessage *message, TupMessageType cmd)
 {
-    smp_message_init(message, TUP_MESSAGE_ACK);
+    smp_message_set_id(message, TUP_MESSAGE_ACK);
     smp_message_set_uint32(message, 0, cmd);
 }
 
@@ -125,7 +141,7 @@ int tup_message_parse_ack(TupMessage *message, TupMessageType *cmd)
 void tup_message_init_error(TupMessage *message, TupMessageType cmd,
         uint32_t error)
 {
-    smp_message_init(message, TUP_MESSAGE_ERROR);
+    smp_message_set_id(message, TUP_MESSAGE_ERROR);
     smp_message_set_uint32(message, 0, cmd);
     smp_message_set_uint32(message, 1, error);
 }
@@ -169,7 +185,7 @@ int tup_message_parse_error(TupMessage *message, TupMessageType *cmd,
 void tup_message_init_load(TupMessage *message, uint8_t effect_id,
         uint16_t bank_id)
 {
-    smp_message_init(message, TUP_MESSAGE_CMD_LOAD);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_LOAD);
     smp_message_set_uint8(message, 0, effect_id);
     smp_message_set_uint16(message, 1, bank_id);
 }
@@ -203,7 +219,7 @@ int tup_message_parse_load(TupMessage *message, uint8_t *effect_id,
  */
 void tup_message_init_play(TupMessage *message, uint8_t effect_id)
 {
-    smp_message_init(message, TUP_MESSAGE_CMD_PLAY);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_PLAY);
     smp_message_set_uint8(message, 0, effect_id);
 }
 
@@ -233,7 +249,7 @@ int tup_message_parse_play(TupMessage *message, uint8_t *effect_id)
  */
 void tup_message_init_stop(TupMessage *message, uint8_t effect_id)
 {
-    smp_message_init(message, TUP_MESSAGE_CMD_STOP);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_STOP);
     smp_message_set_uint8(message, 0, effect_id);
 }
 
@@ -262,7 +278,7 @@ int tup_message_parse_stop(TupMessage *message, uint8_t *effect_id)
  */
 void tup_message_init_get_version(TupMessage *message)
 {
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_VERSION);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_GET_VERSION);
 }
 
 /**
@@ -309,7 +325,7 @@ int tup_message_init_get_parameter_valist(TupMessage *message,
     int ret;
     int i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_PARAMETER);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_GET_PARAMETER);
     smp_message_set_uint8(message, 0, effect_id);
 
     for (i = 1; parameter_id != -1; i++) {
@@ -354,7 +370,7 @@ int tup_message_init_get_parameter_array(TupMessage *message,
     int ret;
     size_t i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_PARAMETER);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_GET_PARAMETER);
     smp_message_set_uint8(message, 0, effect_id);
 
     for (i = 0; i < n_parameters; i++) {
@@ -460,7 +476,7 @@ int tup_message_init_set_parameter_valist(TupMessage *message,
     int ret;
     int i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_SET_PARAMETER);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_SET_PARAMETER);
     smp_message_set_uint8(message, 0, effect_id);
 
     for (i = 1; parameter_id != -1; i += 2) {
@@ -512,7 +528,7 @@ int tup_message_init_set_parameter_array(TupMessage *message,
     int ret;
     size_t i, j;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_SET_PARAMETER);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_SET_PARAMETER);
     smp_message_set_uint8(message, 0, effect_id);
 
     for (i = 0, j = 1; i < n_params; i++, j += 2) {
@@ -586,7 +602,7 @@ int tup_message_parse_set_parameter(TupMessage *message,
 void tup_message_init_bind_effect(TupMessage *message, uint8_t effect_id,
         unsigned int binding_flags)
 {
-    smp_message_init(message, TUP_MESSAGE_CMD_BIND_EFFECT);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_BIND_EFFECT);
     smp_message_set_uint8(message, 0, effect_id);
     smp_message_set_uint8(message, 1, binding_flags);
 }
@@ -657,7 +673,7 @@ int tup_message_init_get_sensor_value_valist(TupMessage *message, int sensor_id,
     int ret;
     int i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_SENSOR_VALUE);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_GET_SENSOR_VALUE);
 
     for (i = 0; sensor_id != -1; i++) {
         ret = smp_message_set_uint8(message, i, sensor_id);
@@ -699,7 +715,7 @@ int tup_message_init_get_sensor_value_array(TupMessage *message,
     int ret;
     size_t i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_SENSOR_VALUE);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_GET_SENSOR_VALUE);
     for (i = 0; i < n_sensors; i++) {
         ret = smp_message_set_uint8(message, i, sensor_ids[i]);
         if (ret < 0)
@@ -792,7 +808,7 @@ int tup_message_init_set_sensor_value_valist(TupMessage *message, int sensor_id,
     int ret;
     int i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_SET_SENSOR_VALUE);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_SET_SENSOR_VALUE);
 
     for (i = 0; sensor_id != -1; i += 2) {
         ret = smp_message_set_uint8(message, i, sensor_id);
@@ -840,7 +856,7 @@ int tup_message_init_set_sensor_value_array(TupMessage *message,
     int ret;
     size_t i, j;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_SET_SENSOR_VALUE);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_SET_SENSOR_VALUE);
     for (i = 0, j = 0; i < n_args; i++, j += 2) {
         ret = smp_message_set_uint8(message, j, args[i].sensor_id);
         if (ret < 0)
@@ -937,7 +953,7 @@ int tup_message_init_get_input_value_valist(TupMessage *message,
     int ret;
     int i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_INPUT_VALUE);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_GET_INPUT_VALUE);
 
     ret = smp_message_set_uint8(message, 0, effect_slot_id);
     if (ret < 0)
@@ -985,7 +1001,7 @@ int tup_message_init_get_input_value_array(TupMessage *message,
     int ret;
     size_t i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_INPUT_VALUE);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_GET_INPUT_VALUE);
 
     ret = smp_message_set_uint8(message, 0, effect_slot_id);
     if (ret < 0)
@@ -1092,7 +1108,7 @@ int tup_message_init_set_input_value_valist(TupMessage *message,
     int ret;
     int i;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_SET_INPUT_VALUE);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_SET_INPUT_VALUE);
 
     ret = smp_message_set_uint8(message, 0, effect_slot_id);
     if (ret < 0)
@@ -1147,7 +1163,7 @@ int tup_message_init_set_input_value_array(TupMessage *message,
     int ret;
     size_t i, j;
 
-    smp_message_init(message, TUP_MESSAGE_CMD_SET_INPUT_VALUE);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_SET_INPUT_VALUE);
 
     ret = smp_message_set_uint8(message, 0, effect_slot_id);
     if (ret < 0)
@@ -1220,7 +1236,7 @@ int tup_message_parse_set_input_value(TupMessage *message,
 void tup_message_init_activate_internal_sensors(TupMessage *message,
         uint8_t state)
 {
-    smp_message_init(message, TUP_MESSAGE_CMD_ACTIVATE_INTERNAL_SENSORS);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_ACTIVATE_INTERNAL_SENSORS);
     smp_message_set_uint8(message, 0, state);
 }
 
@@ -1251,7 +1267,7 @@ int tup_message_parse_activate_internal_sensors(TupMessage *message,
  */
 void tup_message_init_get_buildinfo(TupMessage *message)
 {
-    smp_message_init(message, TUP_MESSAGE_CMD_GET_BUILDINFO);
+    smp_message_set_id(message, TUP_MESSAGE_CMD_GET_BUILDINFO);
 }
 
 /**
@@ -1265,7 +1281,7 @@ void tup_message_init_get_buildinfo(TupMessage *message)
  */
 void tup_message_init_resp_version(TupMessage *message, const char *version)
 {
-    smp_message_init(message, TUP_MESSAGE_RESP_VERSION);
+    smp_message_set_id(message, TUP_MESSAGE_RESP_VERSION);
     smp_message_set_cstring(message, 0, version);
 }
 
@@ -1305,7 +1321,7 @@ int tup_message_init_resp_parameter(TupMessage *message, uint8_t effect_id,
     int ret;
     size_t i, j;
 
-    smp_message_init(message, TUP_MESSAGE_RESP_PARAMETER);
+    smp_message_set_id(message, TUP_MESSAGE_RESP_PARAMETER);
     smp_message_set_uint8(message, 0, effect_id);
 
     for (i = 0, j = 1; i < n_args; i++, j += 2) {
@@ -1382,7 +1398,7 @@ int tup_message_init_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
     int ret;
     size_t i, j;
 
-    smp_message_init(message, TUP_MESSAGE_RESP_SENSOR);
+    smp_message_set_id(message, TUP_MESSAGE_RESP_SENSOR);
 
     for (i = 0, j = 0; i < n_args; i++, j += 2) {
         ret = smp_message_set_uint8(message, j, args[i].sensor_id);
@@ -1453,7 +1469,7 @@ int tup_message_init_resp_input(TupMessage *message, uint8_t effect_slot_id,
     int ret;
     size_t i, j;
 
-    smp_message_init(message, TUP_MESSAGE_RESP_INPUT);
+    smp_message_set_id(message, TUP_MESSAGE_RESP_INPUT);
 
     ret = smp_message_set_uint8(message, 0, effect_slot_id);
     if (ret < 0)
@@ -1527,7 +1543,7 @@ int tup_message_parse_resp_input(TupMessage *message, uint8_t *effect_slot_id,
  */
 void tup_message_init_resp_buildinfo(TupMessage *message, const char *buildinfo)
 {
-    smp_message_init(message, TUP_MESSAGE_RESP_BUILDINFO);
+    smp_message_set_id(message, TUP_MESSAGE_RESP_BUILDINFO);
     smp_message_set_cstring(message, 0, buildinfo);
 }
 

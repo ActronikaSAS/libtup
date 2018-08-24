@@ -88,7 +88,7 @@ static void print_cmdline_options(const Option *options, size_t n_options)
 }
 
 /* some globals variables */
-static TupContext tup_ctx;
+static TupContext *tup_ctx;
 static int response_recv;
 
 /* RX message handling */
@@ -156,10 +156,15 @@ static void on_tup_message(TupContext *ctx, TupMessage *message, void *userdata)
     response_recv = 1;
 }
 
+static void on_tup_error(TupContext *ctx, SmpError error, void *userdata)
+{
+    fprintf(stderr, "Tup error: %d", error);
+}
+
 /* commands */
 static int do_load(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int loaded_id;
     int effect_id;
     int ret;
@@ -177,15 +182,16 @@ static int do_load(int argc, char *argv[])
     }
 
     printf("Loading effect %d to slot %d\n", effect_id, loaded_id);
-    tup_message_init_load(&msg, loaded_id, effect_id);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_load(msg, loaded_id, effect_id);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_play(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int effect_id;
     int ret;
 
@@ -201,15 +207,16 @@ static int do_play(int argc, char *argv[])
     }
 
     printf("Playing effect in slot %d\n", effect_id);
-    tup_message_init_play(&msg, effect_id);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_play(msg, effect_id);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_stop(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int effect_id;
     int ret;
 
@@ -225,39 +232,42 @@ static int do_stop(int argc, char *argv[])
     }
 
     printf("Stopping effect in slot %d\n", effect_id);
-    tup_message_init_stop(&msg, effect_id);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_stop(msg, effect_id);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_get_version(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int ret;
 
     printf("Getting version\n");
-    tup_message_init_get_version(&msg);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_get_version(msg);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_get_buildinfo(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int ret;
 
     printf("Getting buildinfo\n");
-    tup_message_init_get_buildinfo(&msg);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_get_buildinfo(msg);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_get_parameter(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int effect_id, parameter_id;
     int ret;
 
@@ -274,15 +284,16 @@ static int do_get_parameter(int argc, char *argv[])
     }
 
     printf("Getting effect %d parameter %d\n", effect_id, parameter_id);
-    tup_message_init_get_parameter_simple(&msg, effect_id, parameter_id);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_get_parameter_simple(msg, effect_id, parameter_id);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_set_parameter(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int effect_id, parameter_id, parameter_value;
     int ret;
 
@@ -301,16 +312,17 @@ static int do_set_parameter(int argc, char *argv[])
 
     printf("Setting effect %d parameter %d to %d\n", effect_id, parameter_id,
             parameter_value);
-    tup_message_init_set_parameter_simple(&msg, effect_id, parameter_id,
+    msg = tup_message_new();
+    tup_message_init_set_parameter_simple(msg, effect_id, parameter_id,
             parameter_value);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_bind_effect(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int effect_id, flags;
     int ret;
 
@@ -334,15 +346,16 @@ static int do_bind_effect(int argc, char *argv[])
             (flags == 3) ? "1 and 2" :
             (flags & 0x1) ? "1" :
             (flags & 0x2) ? "2" : "0");
-    tup_message_init_bind_effect(&msg, effect_id, flags);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_bind_effect(msg, effect_id, flags);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_get_sensor_value(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int sensor_id;
     int ret;
 
@@ -357,15 +370,16 @@ static int do_get_sensor_value(int argc, char *argv[])
         return -EINVAL;
     }
 
-    tup_message_init_get_sensor_value_simple(&msg, sensor_id);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_get_sensor_value_simple(msg, sensor_id);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_set_sensor_value(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int sensor_id;
     int sensor_value;
     int ret;
@@ -382,15 +396,16 @@ static int do_set_sensor_value(int argc, char *argv[])
         return -EINVAL;
     }
 
-    tup_message_init_set_sensor_value_simple(&msg, sensor_id, sensor_value);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_set_sensor_value_simple(msg, sensor_id, sensor_value);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_get_input_value(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int effect_slot_id;
     int input_id;
     int ret;
@@ -408,15 +423,16 @@ static int do_get_input_value(int argc, char *argv[])
     }
     printf("Slot : %d\ninput : %d\n", effect_slot_id, input_id);
 
-    tup_message_init_get_input_value_simple(&msg, effect_slot_id, input_id);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_get_input_value_simple(msg, effect_slot_id, input_id);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_set_input_value(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int effect_slot_id;
     int input_id;
     int input_value;
@@ -437,16 +453,17 @@ static int do_set_input_value(int argc, char *argv[])
     }
     printf("Slot : %d\ninput : %d\nvalue : %d\n", effect_slot_id, input_id, input_value);
 
-    tup_message_init_set_input_value_simple(&msg, effect_slot_id, input_id,
+    msg = tup_message_new();
+    tup_message_init_set_input_value_simple(msg, effect_slot_id, input_id,
             input_value);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 }
 
 static int do_activate_internal_sensors(int argc, char *argv[])
 {
-    TupMessage msg;
+    TupMessage *msg;
     int state_activation;
     int ret;
 
@@ -472,9 +489,10 @@ static int do_activate_internal_sensors(int argc, char *argv[])
             goto error;
             break;
     }
-    tup_message_init_activate_internal_sensors(&msg, state_activation);
-    ret = tup_context_send(&tup_ctx, &msg);
-    tup_message_clear(&msg);
+    msg = tup_message_new();
+    tup_message_init_activate_internal_sensors(msg, state_activation);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
     return ret;
 
 error:
@@ -535,7 +553,8 @@ static void usage(const char *pname)
 int main(int argc, char *argv[])
 {
     TupCallbacks cbs = {
-        .new_message = on_tup_message
+        .new_message_cb = on_tup_message,
+        .error_cb = on_tup_error,
     };
     const char *device;
     const char *cmd;
@@ -552,9 +571,15 @@ int main(int argc, char *argv[])
     device = argv[1];
     cmd = argv[2];
 
-    ret = tup_context_init(&tup_ctx, device, &cbs, NULL);
+    tup_ctx = tup_context_new(&cbs, NULL);
+    if (tup_ctx == NULL) {
+        fprintf(stderr, "failed to create a tup context\n");
+        return 1;
+    }
+
+    ret = tup_context_open(tup_ctx, device);
     if (ret < 0) {
-        perror("error while initializing tup context");
+        fprintf(stderr, "error while initializing tup context: %d", ret);
         return 1;
     }
 
@@ -578,9 +603,9 @@ int main(int argc, char *argv[])
     /* wait for a response message */
     response_recv = 0;
     while (!response_recv) {
-        ret = tup_context_wait_and_process(&tup_ctx, 2000);
+        ret = tup_context_wait_and_process(tup_ctx, 2000);
         if (ret < 0) {
-            if (ret == -ETIMEDOUT)
+            if (ret == SMP_ERROR_TIMEDOUT)
                 printf("timeout while waiting for response\n");
             else
                 printf("an error occurs while waiting for response\n");
@@ -590,7 +615,7 @@ int main(int argc, char *argv[])
     }
 
 done:
-    tup_context_clear(&tup_ctx);
+    tup_context_free(tup_ctx);
 
     return ret;
 }

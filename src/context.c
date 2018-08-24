@@ -24,55 +24,48 @@
 #include <stdlib.h>
 #include "libtup-private.h"
 
-static void on_sf_new_frame(uint8_t *frame, size_t size, void *userdata)
-{
-    TupContext *ctx = userdata;
-    TupMessage msg;
-    int ret;
-
-    ret = smp_message_init_from_buffer(&msg, frame, size);
-    if (ret < 0) {
-        fprintf(stderr, "failed to init message from frame\n");
-        return;
-    }
-
-    ctx->cbs.new_message(ctx, &msg, ctx->userdata);
-}
-
-static void on_sf_error(SmpSerialFrameError error, void *userdata)
-{
-    fprintf(stderr, "serial frame error: %d\n", error);
-}
-
 /* API */
+
+typedef void (*SmpNewMessageCb)(SmpContext* , SmpMessage *, void *);
 
 /**
  * \ingroup context
  * Create an initialize a new TupContext
  *
- * @param[in] device path to the serial device to use
  * @param[in] cbs pointer to a callback structure
  * @param[in] userdata userdata to pass in callbacks
  *
  * @return a TupContext on success, NULL otherwise.
  */
-TupContext *tup_context_new(const char *device, TupCallbacks *cbs,
+TupContext *tup_context_new(TupCallbacks *cbs, void *userdata)
+{
+    SmpEventCallbacks scbs = {
+        .new_message_cb = (SmpNewMessageCb) cbs->new_message_cb,
+        .error_cb = cbs->error_cb,
+    };
+
+    return smp_context_new(&scbs, userdata);
+}
+
+/**
+ * \ingroup context
+ * Create a new TupContext object from a static storage.
+ * @warning for now the TupContext is only a typedef of SmpContext so the
+ * TupCallbacks should be converted and set to the SmpContext. This function
+ * takes the callbacks only for future compatibility purpose.
+ * Also you can pass NULL and 0 for TupStaticContext and struct_size for now.
+ *
+ * @param[in] sctx a TupStaticContext (not used)
+ * @param[in] struct_size the size of sctx (not used)
+ * @param[in] smp_ctx a SmpContext to use
+ *
+ * @return a SmpContext or NULL on error.
+ */
+TupContext *tup_context_new_from_static(TupStaticContext *sctx,
+        size_t struct_size, SmpContext *smp_ctx, const TupCallbacks *cbs,
         void *userdata)
 {
-    TupContext *ctx;
-    int ret;
-
-    ctx = calloc(1, sizeof(*ctx));
-    if (ctx == NULL)
-        return NULL;
-
-    ret = tup_context_init(ctx, device, cbs, userdata);
-    if (ret < 0) {
-        free(ctx);
-        return NULL;
-    }
-
-    return ctx;
+    return smp_ctx;
 }
 
 /**
@@ -83,44 +76,32 @@ TupContext *tup_context_new(const char *device, TupCallbacks *cbs,
  */
 void tup_context_free(TupContext *ctx)
 {
-    tup_context_clear(ctx);
-    free(ctx);
+    smp_context_free(ctx);
 }
 
 /**
  * \ingroup context
- * Initialize a TupContext using the provided serial device.
+ * Open the provided serial device and use it in the given context.
  *
- * @param[in] ctx the TupContext to initialize
+ * @param[in] ctx the TupContext
  * @param[in] device path to the serial device to use
- * @param[in] cbs pointer to a callback structure
- * @param[in] userdata userdata to pass in callbacks
  *
- * @return 0 on success, a negative errno value on error
+ * @return 0 on success, a SmpError otherwise.
  */
-int tup_context_init(TupContext *ctx, const char *device, TupCallbacks *cbs,
-        void *userdata)
+int tup_context_open(TupContext *ctx, const char *device)
 {
-    const SmpSerialFrameDecoderCallbacks sf_cbs = {
-        .new_frame = on_sf_new_frame,
-        .error = on_sf_error
-    };
-
-    ctx->cbs = *cbs;
-    ctx->userdata = userdata;
-
-    return smp_serial_frame_init(&ctx->sf_ctx, device, &sf_cbs, ctx);
+    return smp_context_open(ctx, device);
 }
 
 /**
  * \ingroup context
- * Clear a TupContext object.
+ * Close the context, releasing the attached serial device.
  *
- * @param[in] ctx the TupContext to clear
+ * @param[in] ctx the TupContext
  */
-void tup_context_clear(TupContext *ctx)
+void tup_context_close(TupContext *ctx)
 {
-    smp_serial_frame_deinit(&ctx->sf_ctx);
+    return smp_context_close(ctx);
 }
 
 /**
@@ -132,13 +113,12 @@ void tup_context_clear(TupContext *ctx)
  * @param[in] parity the parity configuration
  * @param[in] flow_control 1 to enable flow control, 0 to disable
  *
- * @return 0 on success, a negative errno otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_context_set_config(TupContext *ctx, SmpSerialBaudrate baudrate,
         SmpSerialParity parity, int flow_control)
 {
-    return smp_serial_frame_set_config(&ctx->sf_ctx, baudrate, parity,
-            flow_control);
+    return smp_context_set_serial_config(ctx, baudrate, parity, flow_control);
 }
 
 /**
@@ -147,11 +127,11 @@ int tup_context_set_config(TupContext *ctx, SmpSerialBaudrate baudrate,
  *
  * @param[in] ctx the TupContext
  *
- * @return the fd on success, a negative errno value otherwise.
+ * @return the fd on success, a SmpError otherwise.
  */
 intptr_t tup_context_get_fd(TupContext *ctx)
 {
-    return smp_serial_frame_get_fd(&ctx->sf_ctx);
+    return smp_context_get_fd(ctx);
 }
 
 /**
@@ -161,18 +141,11 @@ intptr_t tup_context_get_fd(TupContext *ctx)
  * @param[in] ctx the TupContext
  * @param[in] msg the TupMessage to send
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_context_send(TupContext *ctx, TupMessage *msg)
 {
-    uint8_t buf[512];
-    int ret;
-
-    ret = smp_message_encode(msg, buf, sizeof(buf));
-    if (ret < 0)
-        return ret;
-
-    return smp_serial_frame_send(&ctx->sf_ctx, buf, ret);
+    return smp_context_send_message(ctx, msg);
 }
 
 /**
@@ -182,11 +155,11 @@ int tup_context_send(TupContext *ctx, TupMessage *msg)
  *
  * @param[in] ctx the TupContext
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_context_process_fd(TupContext *ctx)
 {
-    return smp_serial_frame_process_recv_fd(&ctx->sf_ctx);
+    return smp_context_process_fd(ctx);
 }
 
 /**
@@ -197,9 +170,9 @@ int tup_context_process_fd(TupContext *ctx)
  * @param[in] timeout_ms a timeout in milliseconds. A negative value means no
  *                       timeout
  *
- * @return 0 on success, a negativer errno otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_context_wait_and_process(TupContext *ctx, int timeout_ms)
 {
-    return smp_serial_frame_wait_and_process(&ctx->sf_ctx, timeout_ms);
+    return smp_context_wait_and_process(ctx, timeout_ms);
 }

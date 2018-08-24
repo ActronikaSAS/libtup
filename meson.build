@@ -28,7 +28,8 @@ warning_flags = [
 add_project_arguments(c_compiler.get_supported_arguments(warning_flags),
     language: 'c')
 
-libsmp_dep = dependency('libsmp', fallback: [ 'libsmp', 'libsmp_dep'])
+libsmp_dep = dependency('libsmp', fallback: [ 'libsmp', 'libsmp_dep'],
+    version: '>= 0.5.90')
 
 libtup_src = [
     'src/context.c',
@@ -37,7 +38,7 @@ libtup_src = [
 
 libtup_incdir = include_directories(['include'])
 
-libtup_flags = []
+libtup_flags = ['-DTUP_ENABLE_STATIC_API']
 if get_option('default_library') == 'shared'
   libtup_flags += '-DTUP_EXPORT_API'
 endif

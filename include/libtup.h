@@ -24,6 +24,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
+
+#ifdef TUP_ENABLE_STATIC_API
+#define SMP_ENABLE_STATIC_API
+#endif
 #include <libsmp.h>
 
 #ifdef __cplusplus
@@ -41,8 +45,8 @@ extern "C" {
 #   define TUP_API
 #endif
 
-typedef SmpMessage TupMessage;
-typedef struct TupContext TupContext;
+typedef void TupMessage;
+typedef SmpContext TupContext;
 
 /* TupContext API */
 
@@ -53,24 +57,15 @@ typedef struct TupContext TupContext;
 typedef struct
 {
     /** called when a new message has been received. */
-    void (*new_message)(TupContext *ctx, TupMessage *message, void *userdata);
+    void (*new_message_cb)(TupContext *ctx, TupMessage *message, void *userdata);
+    void (*error_cb)(TupContext *ctx, SmpError error, void *userdata);
 } TupCallbacks;
 
-struct TupContext
-{
-    SmpSerialFrameContext sf_ctx;
-    TupCallbacks cbs;
-
-    void *userdata;
-};
-
-TUP_API TupContext *tup_context_new(const char *device, TupCallbacks *cbs,
-                void *userdata);
+TUP_API TupContext *tup_context_new(TupCallbacks *cbs, void *userdata);
 TUP_API void tup_context_free(TupContext *ctx);
 
-TUP_API int tup_context_init(TupContext *ctx, const char *device,
-                TupCallbacks *cbs, void *userdata);
-TUP_API void tup_context_clear(TupContext *ctx);
+TUP_API int tup_context_open(TupContext *ctx, const char *device);
+TUP_API void tup_context_close(TupContext *ctx);
 
 TUP_API int tup_context_set_config(TupContext *ctx, SmpSerialBaudrate baudrate,
                 SmpSerialParity parity, int flow_control);
@@ -116,7 +111,7 @@ typedef enum
  * \ingroup message
  * Type of the message
  */
-#define TUP_MESSAGE_TYPE(msg) ((TupMessageType) ((msg)->msgid))
+#define TUP_MESSAGE_TYPE(msg) (tup_message_get_type(msg))
 
 /**
  * \ingroup message
@@ -313,6 +308,70 @@ TUP_API void tup_message_init_resp_buildinfo(TupMessage *message,
                 const char *buildinfo);
 TUP_API int tup_message_parse_resp_buildinfo(TupMessage *message,
                 const char **buildinfo);
+
+#ifdef TUP_ENABLE_STATIC_API
+/* For now TupContext and TupMessage needs no storage so */
+typedef void TupStaticContext;
+typedef void TupStaticMessage;
+
+/**
+ * \ingroup context
+ * Helper macro to completely define a TupContext using static storage with
+ * provided buffer size.
+ * It defines a function which should be called in your code. The function
+ * name is the concatenation of provided 'name' and '_create' and return
+ * a TupContext*. So the prototype is:
+ * `static TupContext *name_create(const TupCallbacks *cbs, void *userdata)`.
+ * See tup_context_new() for parameters description.
+ *
+ * @param[in] name the name of the context
+ * @param[in] serial_rx_bufsize the size of the serial rx buffer
+ * @param[in] serial_tx_bufsize the size of the serial tx buffer
+ * @param[in] msg_tx_bufsize the size of the message buffer for tx
+ * @param[in] msg_rx_values_size the maximum number of values in the rx message
+ */
+#define TUP_DEFINE_STATIC_CONTEXT(name, serial_rx_bufsize, serial_tx_bufsize,  \
+        msg_tx_bufsize, msg_rx_values_size)                                    \
+SMP_DEFINE_STATIC_CONTEXT(name##_smp, serial_rx_bufsize, serial_tx_bufsize,    \
+            msg_tx_bufsize, msg_rx_values_size)                                \
+static TupContext* name##_create(const TupCallbacks *cbs, void *userdata)      \
+{                                                                              \
+    SmpContext *ctx;                                                           \
+    SmpEventCallbacks scbs = {                                                 \
+        .new_message_cb =                                                      \
+            (void (*)(SmpContext* , SmpMessage *, void *)) cbs->new_message_cb,\
+        .error_cb = cbs->error_cb,                                             \
+    };                                                                         \
+                                                                               \
+    ctx = name##_smp_create(&scbs, userdata);                                  \
+    return tup_context_new_from_static(NULL, 0, ctx, NULL, NULL);              \
+}
+
+/**
+ * \ingroup message
+ * Helper macro to define a TupMessage using static storage.
+ * It defines a function to be called in your code by concatenating `name` and
+ * `_create()` and return a pointer to the TupMessage.
+ * The created function takes the msg id as the first parameter.
+ *
+ * @param[in] name the name to use
+ * @param[in] max_values the maximum number of values in the message
+ */
+#define TUP_DEFINE_STATIC_MESSAGE(name, max_values)                           \
+SMP_DEFINE_STATIC_MESSAGE(name##_smp, max_values)                             \
+static TupMessage* name##_create()                                            \
+{                                                                             \
+    return tup_message_new_from_static(NULL, 0, name##_smp_create(0));        \
+}
+
+TUP_API TupContext *tup_context_new_from_static(TupStaticContext *sctx,
+                size_t struct_size, SmpContext *smp_ctx,
+                const TupCallbacks *cbs, void *userdata);
+
+TUP_API TupMessage *tup_message_new_from_static(TupStaticMessage *smsg,
+                size_t struct_size, SmpMessage *smp_msg);
+
+#endif
 
 #ifdef __cplusplus
 }
