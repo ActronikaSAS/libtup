@@ -72,9 +72,8 @@ TUP_API int tup_context_init(TupContext *ctx, const char *device,
                 TupCallbacks *cbs, void *userdata);
 TUP_API void tup_context_clear(TupContext *ctx);
 
-TUP_API int tup_context_set_config(TupContext *ctx,
-                SmpSerialFrameBaudrate baudrate, SmpSerialFrameParity parity,
-                int flow_control);
+TUP_API int tup_context_set_config(TupContext *ctx, SmpSerialBaudrate baudrate,
+                SmpSerialParity parity, int flow_control);
 
 TUP_API intptr_t tup_context_get_fd(TupContext *ctx);
 

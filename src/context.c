@@ -134,8 +134,8 @@ void tup_context_clear(TupContext *ctx)
  *
  * @return 0 on success, a negative errno otherwise.
  */
-int tup_context_set_config(TupContext *ctx, SmpSerialFrameBaudrate baudrate,
-        SmpSerialFrameParity parity, int flow_control)
+int tup_context_set_config(TupContext *ctx, SmpSerialBaudrate baudrate,
+        SmpSerialParity parity, int flow_control)
 {
     return smp_serial_frame_set_config(&ctx->sf_ctx, baudrate, parity,
             flow_control);
