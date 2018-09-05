@@ -1,31 +1,32 @@
 project('tup', 'c',
     version : '0.5.0',
-    meson_version : '>= 0.38.0',
+    meson_version : '>= 0.43.0',
     default_options : [
       'warning_level=2'
       ])
 
-if meson.get_compiler('c').get_id() == 'gcc'
-  add_project_arguments([
-      # warnings flags
-      '-Wno-unused-parameter',
-      '-Wformat-nonliteral',
-      '-Wformat-security',
-      '-Winit-self',
-      '-Wswitch-default',
-      '-Wuninitialized',
-      '-Wmaybe-uninitialized',
-      '-Wshadow',
-      '-Wframe-larger-than=4096',
-      '-Wpointer-arith',
-      '-Wundef',
-      '-Wcast-qual',
-      '-Wjump-misses-init',
-      '-Wmissing-prototypes',
-      '-Wno-type-limits',
-      '-fstack-usage',
-      ], language : 'c')
-endif
+c_compiler = meson.get_compiler('c')
+warning_flags = [
+    # warnings flags
+    '-Wno-unused-parameter',
+    '-Wformat-nonliteral',
+    '-Wformat-security',
+    '-Winit-self',
+    '-Wswitch-default',
+    '-Wuninitialized',
+    '-Wmaybe-uninitialized',
+    '-Wshadow',
+    '-Wframe-larger-than=4096',
+    '-Wpointer-arith',
+    '-Wundef',
+    '-Wcast-qual',
+    '-Wjump-misses-init',
+    '-Wmissing-prototypes',
+    '-Wno-type-limits',
+    ]
+
+add_project_arguments(c_compiler.get_supported_arguments(warning_flags),
+    language: 'c')
 
 libsmp_dep = dependency('libsmp', fallback: [ 'libsmp', 'libsmp_dep'])
 
