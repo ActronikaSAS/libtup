@@ -29,7 +29,7 @@ add_project_arguments(c_compiler.get_supported_arguments(warning_flags),
     language: 'c')
 
 libsmp_dep = dependency('libsmp', fallback: [ 'libsmp', 'libsmp_dep'],
-    version: '>= 0.5.90')
+    version: '>= 0.6.0')
 
 libtup_src = [
     'src/context.c',
