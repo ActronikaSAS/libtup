@@ -11,6 +11,13 @@
 
 #define N_ELEMENTS(arr) (sizeof((arr)) / sizeof((arr)[0]))
 
+#define TIME_FORMAT "u:%02u:%02u.%03u"
+#define TIME_ARGS(time_us) \
+    (unsigned int) (time_us / 1000 / 1000 / 3600), \
+    (unsigned int) (time_us / 1000 / 1000 % 3600 / 60), \
+    (unsigned int) (time_us / 1000 / 1000 % 60), \
+    (unsigned int) (time_us / 1000 % 1000)
+
 static void print_help_and_exit(void);
 
 /* Command handling */
@@ -91,6 +98,115 @@ static void print_cmdline_options(const Option *options, size_t n_options)
 static TupContext *tup_ctx;
 static int response_recv;
 
+static void sort_task_by_id(TupDebugTaskStatus *in, TupDebugTaskStatus *out,
+        size_t n_tasks)
+{
+    size_t i, j;
+
+    for (i = 0; i < n_tasks; i++) {
+        uint32_t lid = UINT32_MAX;
+        TupDebugTaskStatus *cur = NULL;
+
+        /* find the lowest id in `in` */
+        for (j = 0; j < n_tasks; j++) {
+            if (in[j].id < lid) {
+                lid = in[j].id;
+                cur = in + j;
+            }
+        }
+
+        if (cur == NULL)
+            break;
+
+        out[i] = *cur;
+        cur->id = UINT32_MAX;
+    }
+}
+
+static void handle_debug_system_status_response(SmpMessage *message)
+{
+    TupDebugSystemStatus status;
+    TupDebugTaskStatus unsorted_tasks[16];
+    TupDebugTaskStatus tasks[16];
+    int n_tasks;
+    struct {
+        unsigned int running;
+        unsigned int ready;
+        unsigned int waiting;
+        unsigned int stopped;
+    } tasks_stats = { 0, 0, 0, 0};
+    int i;
+
+    n_tasks = tup_message_init_parse_debug_system_status(message, &status,
+            unsorted_tasks, N_ELEMENTS(unsorted_tasks));
+    if (n_tasks < 0) {
+        fprintf(stderr, "failed to parse system status response\n");
+        return;
+    }
+
+    sort_task_by_id(unsorted_tasks, tasks, n_tasks);
+
+    for (i = 0; i < n_tasks; i++) {
+        switch (tasks[i].state) {
+            case TUP_DEBUG_TASK_STATE_READY:
+                tasks_stats.ready++;
+                break;
+            case TUP_DEBUG_TASK_STATE_RUNNING:
+                tasks_stats.running++;
+                break;
+            case TUP_DEBUG_TASK_STATE_BLOCKED:
+                tasks_stats.waiting++;
+                break;
+            case TUP_DEBUG_TASK_STATE_SUSPENDED:
+            case TUP_DEBUG_TASK_STATE_DELETED:
+            default:
+                tasks_stats.stopped++;
+                break;
+        }
+    }
+
+    printf("Uptime: %02u:%02u:%02u\n",
+            (unsigned int)(status.rtime / 1000 / 1000 / 3600),
+            (unsigned int)(status.rtime / 1000 / 1000 % 3600 / 60),
+            (unsigned int)(status.rtime / 1000 / 1000 % 60));
+    printf("Tasks: %u total, %u running, %u ready, %u waiting, %u stopped\n",
+            n_tasks, tasks_stats.running, tasks_stats.ready,
+            tasks_stats.waiting, tasks_stats.stopped);
+    printf("Mem (B): %u total, %u used, %u free\n\n", status.mem_total,
+            status.mem_used, status.mem_total - status.mem_used);
+
+    printf("TID  ST  PR  RemStk  Time           name\n");
+    for (i = 0; i < n_tasks; i++) {
+        char c;
+
+        switch (tasks[i].state) {
+            case TUP_DEBUG_TASK_STATE_READY:
+                c = 'R';
+                break;
+            case TUP_DEBUG_TASK_STATE_RUNNING:
+                c = 'r';
+                break;
+            case TUP_DEBUG_TASK_STATE_BLOCKED:
+                c = 'B';
+                break;
+            case TUP_DEBUG_TASK_STATE_SUSPENDED:
+                c = 'S';
+                break;
+            case TUP_DEBUG_TASK_STATE_DELETED:
+                c = 'D';
+                break;
+            case TUP_DEBUG_TASK_STATE_NONE:
+            default:
+                c = 'U';
+                break;
+        }
+
+        printf("%3u  %-2c  %2u  %6u  %" TIME_FORMAT "    %s\n",
+                tasks[i].id, c, tasks[i].priority, tasks[i].rem_stack,
+                TIME_ARGS(tasks[i].time), tasks[i].name);
+    }
+}
+
 /* RX message handling */
 static void on_tup_message(TupContext *ctx, TupMessage *message, void *userdata)
 {
@@ -148,6 +264,9 @@ static void on_tup_message(TupContext *ctx, TupMessage *message, void *userdata)
             printf("build information:\n%s", buildinfo);
             break;
         }
+        case TUP_MESSAGE_RESP_DEBUG_SYSTEM_STATUS:
+            handle_debug_system_status_response(message);
+            break;
         default:
             printf("Unhandled message id %d\n", TUP_MESSAGE_TYPE(message));
             break;
@@ -499,6 +618,19 @@ error:
     return -EINVAL;
 }
 
+static int do_debug_get_system_status(int argc, char *argv[])
+{
+    TupMessage *msg;
+    int ret;
+
+    msg = tup_message_new();
+    tup_message_init_cmd_debug_get_system_status(msg);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
+
+    return ret;
+}
+
 static const Command cmds[] = {
     { "load", "<slot-id> <effect-id>", "load given effect in slot", do_load },
     { "play", "<slot-id>", "play the effect in given slot", do_play },
@@ -524,6 +656,8 @@ static const Command cmds[] = {
     { "activate_sensors", "<state>",
         "Activate (1) or not (0) the management of internal sensors",
         do_activate_internal_sensors},
+    { "get_sys_status", "", "Get the system status (debug)",
+        do_debug_get_system_status},
 };
 
 static const Option options[] = {
