@@ -1556,3 +1556,113 @@ int tup_message_parse_resp_buildinfo(TupMessage *message,
 
     return smp_message_get_cstring(message, 0, buildinfo);
 }
+
+/**
+ * \ingroup message
+ * Initialize a message to get the system status.
+ *
+ * @param[in] message the TupMessage
+ */
+void tup_message_init_cmd_debug_get_system_status(TupMessage *message)
+{
+    smp_message_set_id(message, TUP_MESSAGE_CMD_DEBUG_GET_SYSTEM_STATUS);
+}
+
+/**
+ * \ingroup message
+ * Initialize a response message with the system status.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] status a filled TupDebugSystemStatus structure
+ * @param[in] tasks an array of filled TupDebugTaskStatus
+ * @param[in] n_tasks the number of tasks in tasks
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_init_resp_debug_system_status(TupMessage *message,
+        TupDebugSystemStatus *status, TupDebugTaskStatus *tasks, size_t n_tasks)
+{
+    int sindex = 0;
+    size_t i;
+    int ret;
+
+    smp_message_set_id(message, TUP_MESSAGE_RESP_DEBUG_SYSTEM_STATUS);
+
+    /* first, serialize TupDebugSystemStatus */
+    smp_message_set_uint64(message, sindex++, status->rtime);
+    smp_message_set_uint32(message, sindex++, status->mem_total);
+    smp_message_set_uint32(message, sindex++, status->mem_used);
+
+    for (i = 0; i < n_tasks; i++) {
+        ret = smp_message_set(message,
+                6 * i + sindex + 0, SMP_TYPE_UINT32, tasks[i].id,
+                6 * i + sindex + 1, SMP_TYPE_STRING, tasks[i].name,
+                6 * i + sindex + 2, SMP_TYPE_UINT8, tasks[i].state,
+                6 * i + sindex + 3, SMP_TYPE_UINT32, tasks[i].priority,
+                6 * i + sindex + 4, SMP_TYPE_UINT64, tasks[i].time,
+                6 * i + sindex + 5, SMP_TYPE_UINT32, tasks[i].rem_stack,
+                -1);
+        if (ret < 0)
+            return ret;
+    }
+
+    return 0;
+}
+
+/**
+ * \ingroup message
+ * Parse a response message with the system status.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] status a TupDebugSystemStatus structure
+ * @param[in] tasks an array of TupDebugTaskStatus
+ * @param[in] n_tasks the number of tasks in tasks
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_init_parse_debug_system_status(TupMessage *message,
+        TupDebugSystemStatus *status, TupDebugTaskStatus *tasks, size_t n_tasks)
+{
+    size_t i;
+    int ret;
+    int n_msg_tasks;
+    int sindex = 0;
+
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_DEBUG_SYSTEM_STATUS)
+        return -EBADMSG;
+
+    n_msg_tasks = (smp_message_n_args(message) - 3) / 6;
+    if (n_tasks < (size_t) n_msg_tasks)
+        return -EOVERFLOW;
+
+    ret = smp_message_get_uint64(message, sindex++, &status->rtime);
+    if (ret < 0)
+        return ret;
+
+    ret = smp_message_get_uint32(message, sindex++, &status->mem_total);
+    if (ret < 0)
+        return ret;
+
+    ret = smp_message_get_uint32(message, sindex++, &status->mem_used);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0; i < (size_t) n_msg_tasks; i++) {
+        uint8_t tmp_state;
+
+        ret = smp_message_get(message,
+                6 * i + sindex + 0, SMP_TYPE_UINT32, &tasks[i].id,
+                6 * i + sindex + 1, SMP_TYPE_STRING, &tasks[i].name,
+                6 * i + sindex + 2, SMP_TYPE_UINT8, &tmp_state,
+                6 * i + sindex + 3, SMP_TYPE_UINT32, &tasks[i].priority,
+                6 * i + sindex + 4, SMP_TYPE_UINT64, &tasks[i].time,
+                6 * i + sindex + 5, SMP_TYPE_UINT32, &tasks[i].rem_stack,
+                -1);
+        if (ret < 0)
+            return ret;
+
+        tasks[i].state = tmp_state;
+    }
+
+    return n_msg_tasks;
+}

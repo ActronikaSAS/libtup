@@ -104,7 +104,10 @@ typedef enum
     TUP_MESSAGE_RESP_PARAMETER = 101,
     TUP_MESSAGE_RESP_SENSOR = 102,
     TUP_MESSAGE_RESP_BUILDINFO = 103,
-    TUP_MESSAGE_RESP_INPUT = 104
+    TUP_MESSAGE_RESP_INPUT = 104,
+
+    TUP_MESSAGE_CMD_DEBUG_GET_SYSTEM_STATUS = 200,
+    TUP_MESSAGE_RESP_DEBUG_SYSTEM_STATUS = 201,
 } TupMessageType;
 
 /**
@@ -173,6 +176,45 @@ typedef enum
  * Bind to both actuators 1 and 2.
  */
 #define TUP_BINDING_FLAG_BOTH (TUP_BINDING_FLAG_1 | TUP_BINDING_FLAG_2)
+
+/**
+ * \ingroup message
+ * The task state
+ */
+typedef enum
+{
+    TUP_DEBUG_TASK_STATE_NONE = 0,     /**< none */
+    TUP_DEBUG_TASK_STATE_READY,        /**< task is ready to be run */
+    TUP_DEBUG_TASK_STATE_RUNNING,      /**< task is running */
+    TUP_DEBUG_TASK_STATE_BLOCKED,      /**< task is blocked */
+    TUP_DEBUG_TASK_STATE_SUSPENDED,    /**< task is suspended */
+    TUP_DEBUG_TASK_STATE_DELETED,      /**< task is deleted */
+} TupDebugTaskState;
+
+/**
+ * \ingroup message
+ * The task status
+ */
+typedef struct
+{
+    uint32_t id;                /**< id of the task (unique) */
+    const char *name;           /**< name of the task */
+    TupDebugTaskState state;    /**< state of the task */
+    uint32_t priority;          /**< priority of the task */
+    uint64_t time;              /**< running time of the task in microseconds */
+    uint32_t rem_stack;         /**< the remaining stack space in bytes */
+} TupDebugTaskStatus;
+
+/**
+ * \ingroup message
+ * The system status
+ */
+typedef struct
+{
+    uint64_t rtime;        /**< run time since the boot in microseconds */
+    uint32_t mem_total;    /**< the total available memory in the heap */
+    uint32_t mem_used;     /**< the total used memory */
+} TupDebugSystemStatus;
 
 /* TUP messages */
 TUP_API TupMessage *tup_message_new(void);
@@ -308,6 +350,15 @@ TUP_API void tup_message_init_resp_buildinfo(TupMessage *message,
                 const char *buildinfo);
 TUP_API int tup_message_parse_resp_buildinfo(TupMessage *message,
                 const char **buildinfo);
+
+TUP_API void tup_message_init_cmd_debug_get_system_status(TupMessage *message);
+
+TUP_API int tup_message_init_resp_debug_system_status(TupMessage *message,
+                TupDebugSystemStatus *status, TupDebugTaskStatus *tasks,
+                size_t n_tasks);
+TUP_API int tup_message_init_parse_debug_system_status(TupMessage *message,
+                TupDebugSystemStatus *status, TupDebugTaskStatus *tasks,
+                size_t n_tasks);
 
 #ifdef TUP_ENABLE_STATIC_API
 /* For now TupContext and TupMessage needs no storage so */
