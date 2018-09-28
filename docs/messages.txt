@@ -36,6 +36,7 @@ ACK Message:
 
     arguments:
         uint32_t - id of the acknowledged command
+        uint32_t - [data]: command defined data
 
 ERROR message:
     direction:
@@ -48,6 +49,7 @@ ERROR message:
     arguments:
         uint32_t - id of the command which causes the error
         uint32_t - error code
+        uint32_t - [data] command defined data
 
 LOAD message:
     direction:
@@ -61,7 +63,7 @@ LOAD message:
         uint16_t - id of the effect in the library
 
     expected response:
-        ACK, ERROR
+        ACK, ERROR: [data] = requested slot
 
 PLAY message:
     direction:
@@ -74,7 +76,7 @@ PLAY message:
         uint8_t - slot effect to play
 
     expected response:
-        ACK, ERROR
+        ACK, ERROR: [data] = slot
 
 STOP message:
     direction:
@@ -87,7 +89,7 @@ STOP message:
         uint8_t - slot effect to stop
 
     expected response:
-        ACK, ERROR
+        ACK, ERROR: [data] = slot
 
 GET_VERSION:
     direction:
@@ -114,7 +116,8 @@ GET_PARAMETER:
         n * uint8_t - parameter ids to get
 
     expected response:
-        RESP_PARAMETER, ERROR
+        RESP_PARAMETER
+        ERROR: [data] = slot
 
 SET_PARAMETER:
     direction:
@@ -132,7 +135,7 @@ SET_PARAMETER:
         ...
 
     expected response:
-        ACK, ERROR
+        ACK, ERROR: [data] = slot
 
 BIND_EFFECT:
     direction:
@@ -149,7 +152,7 @@ BIND_EFFECT:
             0x2: bind to actuators 2
 
     expected response:
-        ACK, ERROR
+        ACK, ERROR: [data] = slot
 
 GET_SENSOR_VALUE:
     direction:
@@ -162,7 +165,8 @@ GET_SENSOR_VALUE:
         n * uint8_t - sensor from which value should be get
 
     expected response:
-        RESP_SENSOR, ERROR
+        RESP_SENSOR
+        ERROR: [data] = 0
 
 SET_SENSOR_VALUE:
     direction:
@@ -179,7 +183,7 @@ SET_SENSOR_VALUE:
         ...
 
     expected response:
-        ACK, ERROR
+        ACK, ERROR: [data] = 0
 
 GET_BUILDINFO:
     direction:
@@ -203,7 +207,8 @@ GET_INPUT_VALUE:
         n * uint8_t - input value from which effect should be get
 
     expected response:
-        RESP_INPUT, ERROR
+        RESP_INPUT
+        ERROR: [data] = slot
 
 SET_INPUT_VALUE:
     direction:
@@ -221,7 +226,7 @@ SET_INPUT_VALUE:
         ...
 
     expected response:
-        ACK, ERROR
+        ACK, ERROR: [data] = slot
 
 ACTIVATE_INTERNAL_SENSORS:
     direction:
@@ -234,7 +239,7 @@ ACTIVATE_INTERNAL_SENSORS:
         uint8_t - state of the activation
 
     expected response:
-        ACK, ERROR
+        ACK, ERROR: [data] = state
 
 RESP_VERSION:
     direction:

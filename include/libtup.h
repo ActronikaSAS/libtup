@@ -224,12 +224,20 @@ TUP_API TupMessageType tup_message_get_type(TupMessage *message);
 TUP_API void tup_message_clear(TupMessage *message);
 
 TUP_API void tup_message_init_ack(TupMessage *message, TupMessageType cmd);
+TUP_API void tup_message_init_ack_full(TupMessage *message, TupMessageType cmd,
+                uint32_t arg1);
 TUP_API int tup_message_parse_ack(TupMessage *message, TupMessageType *cmd);
+TUP_API int tup_message_parse_ack_full(TupMessage *message,
+                TupMessageType *cmd, uint32_t *arg1);
 
 TUP_API void tup_message_init_error(TupMessage *message, TupMessageType cmd,
                 uint32_t error);
+TUP_API void tup_message_init_error_full(TupMessage *message,
+                TupMessageType cmd, uint32_t error, uint32_t arg1);
 TUP_API int tup_message_parse_error(TupMessage *message, TupMessageType *cmd,
                 uint32_t *error);
+TUP_API int tup_message_parse_error_full(TupMessage *message,
+                TupMessageType *cmd, uint32_t *error, uint32_t *arg1);
 
 TUP_API void tup_message_init_load(TupMessage *message, uint8_t effect_id,
                 uint16_t bank_id);
