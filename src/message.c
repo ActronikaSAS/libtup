@@ -103,13 +103,29 @@ TupMessageType tup_message_get_type(TupMessage *message)
  */
 void tup_message_init_ack(TupMessage *message, TupMessageType cmd)
 {
-    smp_message_set_id(message, TUP_MESSAGE_ACK);
-    smp_message_set_uint32(message, 0, cmd);
+    tup_message_init_ack_full(message, cmd, 0);
 }
 
 /**
  * \ingroup message
- * Parse an ACK message and set the message which was aknowledged.
+ * Initialize an ACK message for a given TupMessageType.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] cmd the TupMessageType of the acknowledged message
+ * @param[in] arg1 an arbitrary uint32_t data
+ */
+void tup_message_init_ack_full(TupMessage *message, TupMessageType cmd,
+        uint32_t arg1)
+{
+    smp_message_set_id(message, TUP_MESSAGE_ACK);
+    smp_message_set(message, 0, SMP_TYPE_UINT32, cmd,
+            1, SMP_TYPE_UINT32, arg1,
+            -1);
+}
+
+/**
+ * \ingroup message
+ * Parse an ACK message and set the message which was acknowledged.
  *
  * @param[in] message the TupMessage
  * @param[out] cmd a pointer to a TupMessageType to hold the acknowledge message
@@ -119,17 +135,40 @@ void tup_message_init_ack(TupMessage *message, TupMessageType cmd)
  */
 int tup_message_parse_ack(TupMessage *message, TupMessageType *cmd)
 {
-    uint32_t cmd_id;
+    return tup_message_parse_ack_full(message, cmd, NULL);
+}
+
+/**
+ * \ingroup message
+ * Parse an ACK message and set the message which was acknowledged.
+ *
+ * @param[in] message the TupMessage
+ * @param[out] cmd a pointer to a TupMessageType to hold the acknowledge message
+ *                 type
+ * @param[out] arg1 an arbitrary uint32_t data (can be NULL)
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_parse_ack_full(TupMessage *message, TupMessageType *cmd,
+        uint32_t *arg1)
+{
+    uint32_t cmd_id, arg1_tmp;
     int ret;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_ACK)
         return SMP_ERROR_BAD_MESSAGE;
 
-    ret = smp_message_get_uint32(message, 0, &cmd_id);
+    ret = smp_message_get(message, 0, SMP_TYPE_UINT32, &cmd_id,
+            1, SMP_TYPE_UINT32, &arg1_tmp,
+            -1);
     if (ret < 0)
         return ret;
 
     *cmd = (TupMessageType) cmd_id;
+
+    if (arg1 != NULL)
+        *arg1 = arg1_tmp;
+
     return 0;
 }
 
@@ -144,9 +183,26 @@ int tup_message_parse_ack(TupMessage *message, TupMessageType *cmd)
 void tup_message_init_error(TupMessage *message, TupMessageType cmd,
         uint32_t error)
 {
+    tup_message_init_error_full(message, TUP_MESSAGE_ERROR, error, 0);
+}
+
+/**
+ * \ingroup message
+ * Initialize an error message with given message type and error.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] cmd the TupMessageType error is for
+ * @param[in] error the error code
+ * @param[in] arg1 an arbitrary uint32_t data
+ */
+void tup_message_init_error_full(TupMessage *message, TupMessageType cmd,
+        uint32_t error, uint32_t arg1)
+{
     smp_message_set_id(message, TUP_MESSAGE_ERROR);
-    smp_message_set_uint32(message, 0, cmd);
-    smp_message_set_uint32(message, 1, error);
+    smp_message_set(message, 0, SMP_TYPE_UINT32, cmd,
+            1, SMP_TYPE_UINT32, error,
+            2, SMP_TYPE_UINT32, arg1,
+            -1);
 }
 
 /**
@@ -162,16 +218,38 @@ void tup_message_init_error(TupMessage *message, TupMessageType cmd,
 int tup_message_parse_error(TupMessage *message, TupMessageType *cmd,
         uint32_t *error)
 {
-    uint32_t cmd_id;
+    return tup_message_parse_error_full(message, cmd, error, NULL);
+}
+
+/**
+ * \ingroup message
+ * Parse an error message.
+ *
+ * @param[in] message the TupMessage
+ * @param[out] cmd the TupMessageType error is for
+ * @param[out] error the error code
+ * @param[out] arg1 an arbitrary uint32_t data (can be NULL)
+ *
+ * @return 0 on success, a negative errno value otherwise.
+ */
+int tup_message_parse_error_full(TupMessage *message, TupMessageType *cmd,
+        uint32_t *error, uint32_t *arg1)
+{
+    uint32_t cmd_id, arg1_tmp;
     int ret;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_ERROR)
         return SMP_ERROR_BAD_MESSAGE;
 
     ret = smp_message_get(message, 0, SMP_TYPE_UINT32, &cmd_id,
-            1, SMP_TYPE_UINT32, error, -1);
+            1, SMP_TYPE_UINT32, error,
+            2, SMP_TYPE_UINT32, &arg1_tmp,
+            -1);
     if (ret < 0)
         return ret;
+
+    if (arg1 != NULL)
+        *arg1 = arg1_tmp;
 
     *cmd = cmd_id;
     return 0;
