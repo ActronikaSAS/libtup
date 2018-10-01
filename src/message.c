@@ -25,7 +25,6 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include "libtup-private.h"
 
 /**
  * \ingroup message
@@ -112,7 +111,7 @@ void tup_message_init_ack(TupMessage *message, TupMessageType cmd)
  * @param[out] cmd a pointer to a TupMessageType to hold the acknowledge message
  *                 type
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_parse_ack(TupMessage *message, TupMessageType *cmd)
 {
@@ -120,7 +119,7 @@ int tup_message_parse_ack(TupMessage *message, TupMessageType *cmd)
     int ret;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_ACK)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     ret = smp_message_get_uint32(message, 0, &cmd_id);
     if (ret < 0)
@@ -154,7 +153,7 @@ void tup_message_init_error(TupMessage *message, TupMessageType cmd,
  * @param[out] cmd the TupMessageType error is for
  * @param[out] error the error code
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_parse_error(TupMessage *message, TupMessageType *cmd,
         uint32_t *error)
@@ -163,7 +162,7 @@ int tup_message_parse_error(TupMessage *message, TupMessageType *cmd,
     int ret;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_ERROR)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     ret = smp_message_get(message, 0, SMP_TYPE_UINT32, &cmd_id,
             1, SMP_TYPE_UINT32, error, -1);
@@ -198,13 +197,13 @@ void tup_message_init_load(TupMessage *message, uint8_t effect_id,
  * @param[out] effect_id the slot in which the effect should be loaded
  * @param[out] bank_id the id of the effect in the library
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_parse_load(TupMessage *message, uint8_t *effect_id,
         uint16_t *bank_id)
 {
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_LOAD)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     return smp_message_get(message, 0, SMP_TYPE_UINT8, effect_id,
             1, SMP_TYPE_UINT16, bank_id, -1);
@@ -230,12 +229,12 @@ void tup_message_init_play(TupMessage *message, uint8_t effect_id)
  * @param[in] message the TupMessage
  * @param[out] effect_id the loaded effect to play
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_parse_play(TupMessage *message, uint8_t *effect_id)
 {
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_PLAY)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     return smp_message_get_uint8(message, 0, effect_id);
 }
@@ -260,12 +259,12 @@ void tup_message_init_stop(TupMessage *message, uint8_t effect_id)
  * @param[in] message the TupMessage
  * @param[out] effect_id the loaded effect to stop
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_parse_stop(TupMessage *message, uint8_t *effect_id)
 {
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_STOP)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     return smp_message_get_uint8(message, 0, effect_id);
 }
@@ -291,7 +290,7 @@ void tup_message_init_get_version(TupMessage *message)
  * @param[in] parameter_id id of the first parameter to get
  * @param[in] ... variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_get_parameter(TupMessage *message, uint8_t effect_id,
         int parameter_id, ...)
@@ -317,7 +316,7 @@ int tup_message_init_get_parameter(TupMessage *message, uint8_t effect_id,
  * @param[in] parameter_id id of the first parameter to get
  * @param[in] varargs a va_list of parameter_id to get
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_get_parameter_valist(TupMessage *message,
         uint8_t effect_id, int parameter_id, va_list varargs)
@@ -362,7 +361,7 @@ void tup_message_init_get_parameter_simple(TupMessage *message,
  * @param[in] parameter_ids an array of parameter ids to get
  * @param[in] n_parameters the number of parameters in parameter_ids
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_get_parameter_array(TupMessage *message,
         uint8_t effect_id, uint8_t *parameter_ids, size_t n_parameters)
@@ -392,8 +391,7 @@ int tup_message_init_get_parameter_array(TupMessage *message,
  * @param[out] parameter_ids pointer to an array of parameter ids
  * @param[in] size the size of parameter_ids array
  *
- * @return the number of parameters to get on success, a negative errno value
- * otherwise.
+ * @return the number of parameters to get on success, a SmpError otherwise.
  */
 int tup_message_parse_get_parameter(TupMessage *message, uint8_t *effect_id,
         uint8_t *parameter_ids, size_t size)
@@ -403,7 +401,7 @@ int tup_message_parse_get_parameter(TupMessage *message, uint8_t *effect_id,
     int i;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_GET_PARAMETER)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     ret = smp_message_get_uint8(message, 0, effect_id);
     if (ret < 0)
@@ -413,7 +411,7 @@ int tup_message_parse_get_parameter(TupMessage *message, uint8_t *effect_id,
     n_params = smp_message_n_args(message) - 1;
     if (size < (size_t) n_params) {
         /* array too small */
-        return -ENOMEM;
+        return SMP_ERROR_OVERFLOW;
     }
 
     for (i = 0; i < n_params; i++) {
@@ -439,7 +437,7 @@ int tup_message_parse_get_parameter(TupMessage *message, uint8_t *effect_id,
  * @param[in] parameter_value value of the first parameter to set
  * @param[in] ... variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_set_parameter(TupMessage *message, uint8_t effect_id,
         int parameter_id, uint32_t parameter_value, ...)
@@ -467,7 +465,7 @@ int tup_message_init_set_parameter(TupMessage *message, uint8_t effect_id,
  * @param[in] parameter_value value of the first parameter to set
  * @param[in] varargs variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_set_parameter_valist(TupMessage *message,
         uint8_t effect_id, int parameter_id, uint32_t parameter_value,
@@ -520,7 +518,7 @@ void tup_message_init_set_parameter_simple(TupMessage *message,
  * @param[in] params an array of TupParameterArgs
  * @param[in] n_params the number of parameters in TupParameterArgs
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_set_parameter_array(TupMessage *message,
         uint8_t effect_id, TupParameterArgs *params, size_t n_params)
@@ -554,8 +552,7 @@ int tup_message_init_set_parameter_array(TupMessage *message,
  * @param[out] params pointer to an array of TupParameterArgs
  * @param[in] size the size of params array
  *
- * @return the number of parameters to set on success, a negative errno value
- * otherwise.
+ * @return the number of parameters to set on success, a SmpError otherwise.
  */
 int tup_message_parse_set_parameter(TupMessage *message,
         uint8_t *effect_id, TupParameterArgs *params, size_t size)
@@ -565,7 +562,7 @@ int tup_message_parse_set_parameter(TupMessage *message,
     int i, j;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_SET_PARAMETER)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     ret = smp_message_get_uint8(message, 0, effect_id);
     if (ret < 0)
@@ -575,7 +572,7 @@ int tup_message_parse_set_parameter(TupMessage *message,
      * already get one */
     n_params = (smp_message_n_args(message) - 1) / 2;
     if (size < (size_t) n_params)
-        return -ENOMEM;
+        return SMP_ERROR_OVERFLOW;
 
     for (i = 0, j = 1; i < n_params; i++, j += 2) {
         ret = smp_message_get_uint8(message, j, &params[i].parameter_id);
@@ -615,7 +612,7 @@ void tup_message_init_bind_effect(TupMessage *message, uint8_t effect_id,
  * @param[out] effect_id the loaded effect id to bind to
  * @param[out] binding_flags the binding flags
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_parse_bind_effect(TupMessage *message, uint8_t *effect_id,
         unsigned int *binding_flags)
@@ -624,7 +621,7 @@ int tup_message_parse_bind_effect(TupMessage *message, uint8_t *effect_id,
     int ret;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_BIND_EFFECT)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     ret = smp_message_get(message, 0, SMP_TYPE_UINT8, effect_id,
             1, SMP_TYPE_UINT8, &flags, -1);
@@ -642,7 +639,7 @@ int tup_message_parse_bind_effect(TupMessage *message, uint8_t *effect_id,
  * @param[in] sensor_id id of the first sensor value to get
  * @param[in] ... variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_get_sensor_value(TupMessage *message, int sensor_id, ...)
 {
@@ -665,7 +662,7 @@ int tup_message_init_get_sensor_value(TupMessage *message, int sensor_id, ...)
  * @param[in] sensor_id id of the first sensor value to get
  * @param[in] varargs variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_get_sensor_value_valist(TupMessage *message, int sensor_id,
         va_list varargs)
@@ -707,7 +704,7 @@ void tup_message_init_get_sensor_value_simple(TupMessage *message,
  * @param[in] sensor_ids an array of sensor ids to get
  * @param[in] n_sensors the number of sensor ids in sensor_ids
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_get_sensor_value_array(TupMessage *message,
         uint8_t *sensor_ids, size_t n_sensors)
@@ -733,8 +730,7 @@ int tup_message_init_get_sensor_value_array(TupMessage *message,
  * @param[out] sensor_ids pointer to an array of sensor ids
  * @param[in] size the size of sensor_ids array
  *
- * @return the number of sensor to get on success, a negative errno value
- * otherwise.
+ * @return the number of sensor to get on success, a SmpError otherwise.
  */
 int tup_message_parse_get_sensor_value(TupMessage *message,
         uint8_t *sensor_ids, size_t size)
@@ -744,12 +740,12 @@ int tup_message_parse_get_sensor_value(TupMessage *message,
     int i;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_GET_SENSOR_VALUE)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     /* n_params >= 0 as we already get one arg */
     n_params = smp_message_n_args(message);
     if (size < (size_t) n_params)
-        return -ENOMEM;
+        return SMP_ERROR_OVERFLOW;
 
     for (i = 0; i < n_params; i++) {
         ret = smp_message_get_uint8(message, i, &sensor_ids[i]);
@@ -773,7 +769,7 @@ int tup_message_parse_get_sensor_value(TupMessage *message,
  * @param[in] sensor_value the first value to set
  * @param[in] ... variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_set_sensor_value(TupMessage *message, int sensor_id,
         int sensor_value, ...)
@@ -800,7 +796,7 @@ int tup_message_init_set_sensor_value(TupMessage *message, int sensor_id,
  * @param[in] sensor_value the first value to set
  * @param[in] varargs variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_set_sensor_value_valist(TupMessage *message, int sensor_id,
         int sensor_value, va_list varargs)
@@ -848,7 +844,7 @@ void tup_message_init_set_sensor_value_simple(TupMessage *message,
  * @param[in] args an array of TupSensorArgs
  * @param[in] n_args the number of args in TupSensorValueArgs
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_set_sensor_value_array(TupMessage *message,
         TupSensorValueArgs *args, size_t n_args)
@@ -878,8 +874,7 @@ int tup_message_init_set_sensor_value_array(TupMessage *message,
  * @param[out] args pointer to an array of TupSensorValueArgs
  * @param[in] size the size of args array
  *
- * @return the number of sensor value to set on success, a negative errno value
- * otherwise.
+ * @return the number of sensor value to set on success, a SmpError otherwise.
  */
 int tup_message_parse_set_sensor_value(TupMessage *message,
         TupSensorValueArgs *args, size_t size)
@@ -889,12 +884,12 @@ int tup_message_parse_set_sensor_value(TupMessage *message,
     int i, j;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_SET_SENSOR_VALUE)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     /* we use two args in SmpMessage for one sensor value */
     n_params = smp_message_n_args(message) / 2;
     if (size < (size_t) n_params)
-        return -ENOMEM;
+        return SMP_ERROR_OVERFLOW;
 
     for (i = 0, j = 0; i < n_params; i++, j += 2) {
         ret = smp_message_get_uint8(message, j, &args[i].sensor_id);
@@ -919,7 +914,7 @@ int tup_message_parse_set_sensor_value(TupMessage *message,
  * @param[in] input_id id of the first input value to get
  * @param[in] ... variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_get_input_value(TupMessage *message, int effect_slot_id,
         int input_id, ...)
@@ -945,7 +940,7 @@ int tup_message_init_get_input_value(TupMessage *message, int effect_slot_id,
  * @param[in] input_id id of the first input value to get
  * @param[in] varargs variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_get_input_value_valist(TupMessage *message,
         int effect_slot_id, int input_id, va_list varargs)
@@ -993,7 +988,7 @@ void tup_message_init_get_input_value_simple(TupMessage *message,
  * @param[in] input_ids an array of input ids to get
  * @param[in] n_inputs the number of input ids in input_ids
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_get_input_value_array(TupMessage *message,
         uint8_t effect_slot_id, uint8_t *input_ids, size_t n_inputs)
@@ -1025,8 +1020,7 @@ int tup_message_init_get_input_value_array(TupMessage *message,
  * @param[out] input_ids pointer to an array of input ids
  * @param[in] size the size of input_ids array
  *
- * @return the number of input to get on success, a negative errno value
- * otherwise.
+ * @return the number of input to get on success, a SmpError otherwise.
  */
 int tup_message_parse_get_input_value(TupMessage *message,
         uint8_t *effect_slot_id, uint8_t *input_ids, size_t size)
@@ -1036,12 +1030,12 @@ int tup_message_parse_get_input_value(TupMessage *message,
     int i;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_GET_INPUT_VALUE)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     /* n_params >= 0 as we already get one arg */
     n_params = smp_message_n_args(message) - 1;
     if (size < (size_t) n_params)
-        return -ENOMEM;
+        return SMP_ERROR_OVERFLOW;
 
     ret = smp_message_get_uint8(message, 0, effect_slot_id);
     if (ret < 0) {
@@ -1072,7 +1066,7 @@ int tup_message_parse_get_input_value(TupMessage *message,
  * @param[in] input_value the first value to set
  * @param[in] ... variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_set_input_value(TupMessage *message,
         int effect_slot_id, int input_id, int input_value, ...)
@@ -1100,7 +1094,7 @@ int tup_message_init_set_input_value(TupMessage *message,
  * @param[in] input_value the first value to set
  * @param[in] varargs variable argument
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_set_input_value_valist(TupMessage *message,
         int effect_slot_id, int input_id, int input_value, va_list varargs)
@@ -1155,7 +1149,7 @@ void tup_message_init_set_input_value_simple(TupMessage *message,
  * @param[in] args an array of TupInputArgs
  * @param[in] n_args the number of args in TupInputValueArgs
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_set_input_value_array(TupMessage *message,
         uint8_t effect_slot_id, TupInputValueArgs *args, size_t n_args)
@@ -1191,8 +1185,7 @@ int tup_message_init_set_input_value_array(TupMessage *message,
  * @param[out] args pointer to an array of TupInputValueArgs
  * @param[in] size the size of args array
  *
- * @return the number of input value to set on success, a negative errno value
- * otherwise.
+ * @return the number of input value to set on success, a SmpError otherwise.
  */
 int tup_message_parse_set_input_value(TupMessage *message,
         uint8_t *effect_slot_id, TupInputValueArgs *args, size_t size)
@@ -1202,12 +1195,12 @@ int tup_message_parse_set_input_value(TupMessage *message,
     int i, j;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_CMD_SET_INPUT_VALUE)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     /* we use two args in SmpMessage for one input value */
     n_params = (smp_message_n_args(message) - 1 ) / 2;
     if (size < (size_t) n_params)
-        return -ENOMEM;
+        return SMP_ERROR_OVERFLOW;
 
     ret = smp_message_get_uint8(message, 0, effect_slot_id);
     if (ret < 0)
@@ -1254,7 +1247,7 @@ int tup_message_parse_activate_internal_sensors(TupMessage *message,
     int msgid = smp_message_get_msgid(message);
 
     if (msgid != TUP_MESSAGE_CMD_ACTIVATE_INTERNAL_SENSORS)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     return smp_message_get_uint8(message, 0, state);
 }
@@ -1294,12 +1287,12 @@ void tup_message_init_resp_version(TupMessage *message, const char *version)
  * @param[in] message the TupMessage
  * @param[out] version the version
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_parse_resp_version(TupMessage *message, const char **version)
 {
     if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_VERSION)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     return smp_message_get_cstring(message, 0, version);
 }
@@ -1313,7 +1306,7 @@ int tup_message_parse_resp_version(TupMessage *message, const char **version)
  * @param[in] args an array of TupParameterArgs
  * @param[in] n_args the number of parameters in TupParameterArgs
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_resp_parameter(TupMessage *message, uint8_t effect_id,
         TupParameterArgs *args, size_t n_args)
@@ -1346,8 +1339,7 @@ int tup_message_init_resp_parameter(TupMessage *message, uint8_t effect_id,
  * @param[out] args an array of TupParameterArgs
  * @param[in] size the size of args array
  *
- * @return the number of parameters on success, a negative errno value
- * otherwise.
+ * @return the number of parameters on success, a SmpError otherwise.
  */
 int tup_message_parse_resp_parameter(TupMessage *message, uint8_t *effect_id,
         TupParameterArgs *args, size_t size)
@@ -1357,7 +1349,7 @@ int tup_message_parse_resp_parameter(TupMessage *message, uint8_t *effect_id,
     int i, j;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_PARAMETER)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     ret = smp_message_get_uint8(message, 0, effect_id);
     if (ret < 0)
@@ -1367,7 +1359,7 @@ int tup_message_parse_resp_parameter(TupMessage *message, uint8_t *effect_id,
      * already get one */
     n_params = (smp_message_n_args(message) - 1) / 2;
     if (size < (size_t) n_params)
-        return -ENOMEM;
+        return SMP_ERROR_OVERFLOW;
 
     for (i = 0, j = 1; i < n_params; i++, j += 2) {
         ret = smp_message_get_uint8(message, j, &args[i].parameter_id);
@@ -1390,7 +1382,7 @@ int tup_message_parse_resp_parameter(TupMessage *message, uint8_t *effect_id,
  * @param[in] args an array of TupSensorValueArgs
  * @param[in] n_args the number of elements in args
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
         size_t n_args)
@@ -1421,8 +1413,7 @@ int tup_message_init_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
  * @param[out] args an array of TupSensorValueArgs
  * @param[in] size the size of args array
  *
- * @return the number of sensor value on success, a negative errno value
- * otherwise.
+ * @return the number of sensor value on success, a SmpError otherwise.
  */
 int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
         size_t size)
@@ -1432,12 +1423,12 @@ int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
     int i, j;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_SENSOR)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     /* we use two args in SmpMessage for one parameter */
     n_params = smp_message_n_args(message) / 2;
     if (size < (size_t) n_params)
-        return -ENOMEM;
+        return SMP_ERROR_OVERFLOW;
 
     for (i = 0, j = 0; i < n_params; i++, j += 2) {
         ret = smp_message_get_uint8(message, j, &args[i].sensor_id);
@@ -1461,7 +1452,7 @@ int tup_message_parse_resp_sensor(TupMessage *message, TupSensorValueArgs *args,
  * @param[in] args an array of TupInputValueArgs
  * @param[in] n_args the number of elements in args
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_init_resp_input(TupMessage *message, uint8_t effect_slot_id,
         TupInputValueArgs *args, size_t n_args)
@@ -1497,8 +1488,7 @@ int tup_message_init_resp_input(TupMessage *message, uint8_t effect_slot_id,
  * @param[out] args an array of TupInputValueArgs
  * @param[in] size the size of args array
  *
- * @return the number of input value on success, a negative errno value
- * otherwise.
+ * @return the number of input value on success, a SmpError otherwise.
  */
 int tup_message_parse_resp_input(TupMessage *message, uint8_t *effect_slot_id,
         TupInputValueArgs *args, size_t size)
@@ -1508,12 +1498,12 @@ int tup_message_parse_resp_input(TupMessage *message, uint8_t *effect_slot_id,
     int i, j;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_INPUT)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     /* we use two args in SmpMessage for one parameter */
     n_params = (smp_message_n_args(message) - 1) / 2;
     if (size < (size_t) n_params)
-        return -ENOMEM;
+        return SMP_ERROR_OVERFLOW;
 
     ret = smp_message_get_uint8(message, 0, effect_slot_id);
     if (ret < 0)
@@ -1556,13 +1546,13 @@ void tup_message_init_resp_buildinfo(TupMessage *message, const char *buildinfo)
  * @param[in] message the TupMessage
  * @param[out] buildinfo the buildinfo
  *
- * @return 0 on success, a negative errno value otherwise.
+ * @return 0 on success, a SmpError otherwise.
  */
 int tup_message_parse_resp_buildinfo(TupMessage *message,
         const char **buildinfo)
 {
     if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_BUILDINFO)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     return smp_message_get_cstring(message, 0, buildinfo);
 }
