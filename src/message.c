@@ -387,6 +387,40 @@ int tup_message_init_get_parameter_array(TupMessage *message,
 
 /**
  * \ingroup message
+ * Initialize a get_parameter with only effect_id. User must use
+ * tup_message_init_get_parameter_set_parameter_id() afterward to set the
+ * requeated ids.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] effect_id the loaded effect id
+ */
+void tup_message_init_get_parameter_set_effect_id(TupMessage *message,
+        uint8_t effect_id)
+{
+    smp_message_set_id(message, TUP_MESSAGE_CMD_GET_PARAMETER);
+    smp_message_set_uint8(message, 0, effect_id);
+}
+
+/**
+ * \ingroup message
+ * Set a parameter id to request in a get_parameter message. User must have
+ * called tup_message_init_get_parameter_set_effect_id() before calling this
+ * method.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] index the Nth parameter to request
+ * @param[in] parameter_id the parameter id to request
+ *
+ * @return 0 on success, a SmpError otherwise.
+ */
+int tup_message_init_get_parameter_set_parameter_id(TupMessage *message,
+        unsigned int index, uint8_t parameter_id)
+{
+    return smp_message_set_uint8(message, 1 + index, parameter_id);
+}
+
+/**
+ * \ingroup message
  * Parse a get_parameter message and store the result in effect_id and
  * parameters_ids.
  *
@@ -1376,6 +1410,53 @@ int tup_message_parse_resp_parameter(TupMessage *message, uint8_t *effect_id,
     }
 
     return n_params;
+}
+
+/**
+ * \ingroup message
+ * Get the effect id from a get_parameter response message.
+ *
+ * @param[in] message the TupMessage
+ * @param[out] effect_id pointer to hold the loaded effect id
+ *
+ * @return 0 on success, a SmpError otherwise.
+ */
+int tup_message_parse_resp_parameter_get_effect_id(TupMessage *message,
+        uint8_t *effect_id)
+{
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_PARAMETER)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    return smp_message_get_uint8(message, 0, effect_id);
+}
+
+/**
+ * \ingroup message
+ * Get the Nth parameter of a get_parameter response message.
+ *
+ * @param[in] message the TupMessage
+ * @param[in] index the Nth parameter to get
+ * @param[out] arg the parameter.
+ *
+ * @return 0 on success, a SmpError otherwise.
+ */
+int tup_message_parse_resp_parameter_get_parameter(TupMessage *message,
+        unsigned int index, TupParameterArgs *arg)
+{
+    int ret;
+
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_PARAMETER)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    ret = smp_message_get_uint8(message, 1 + 2 * index, &arg->parameter_id);
+    if (ret < 0)
+        return ret;
+
+    ret = smp_message_get_uint32(message, 2 + 2 * index, &arg->parameter_value);
+    if (ret < 0)
+        return ret;
+
+    return 0;
 }
 
 /**

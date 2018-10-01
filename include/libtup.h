@@ -252,6 +252,10 @@ TUP_API void tup_message_init_get_parameter_simple(TupMessage *message,
                 uint8_t effect_id, uint8_t parameter_id);
 TUP_API int tup_message_init_get_parameter_array(TupMessage *message,
                 uint8_t effect_id, uint8_t *parameter_ids, size_t n_parameters);
+TUP_API void tup_message_init_get_parameter_set_effect_id(TupMessage *message,
+                uint8_t effect_id);
+TUP_API int tup_message_init_get_parameter_set_parameter_id(TupMessage *message,
+                unsigned int index, uint8_t parameter_id);
 TUP_API int tup_message_parse_get_parameter(TupMessage *message,
                 uint8_t *effect_id, uint8_t *parameter_ids, size_t size);
 
@@ -335,6 +339,10 @@ TUP_API int tup_message_init_resp_parameter(TupMessage *message,
                 uint8_t effect_id, TupParameterArgs *args, size_t n_args);
 TUP_API int tup_message_parse_resp_parameter(TupMessage *message,
                 uint8_t *effect_id, TupParameterArgs *args, size_t size);
+TUP_API int tup_message_parse_resp_parameter_get_effect_id(TupMessage *message,
+                uint8_t *effect_id);
+TUP_API int tup_message_parse_resp_parameter_get_parameter(TupMessage *message,
+                unsigned int index, TupParameterArgs *arg);
 
 TUP_API int tup_message_init_resp_sensor(TupMessage *message,
                 TupSensorValueArgs *args, size_t n_args);
