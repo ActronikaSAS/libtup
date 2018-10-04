@@ -47,7 +47,8 @@ libtup = library('tup', libtup_src,
     include_directories : [libtup_incdir],
     c_args : libtup_flags,
     cpp_args : libtup_flags,
-    dependencies : [libsmp_dep])
+    dependencies : [libsmp_dep],
+    install: true)
 
 libtup_dep = declare_dependency(link_with : libtup,
     include_directories : [libtup_incdir],
