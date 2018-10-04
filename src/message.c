@@ -1716,6 +1716,106 @@ int tup_message_parse_resp_buildinfo(TupMessage *message,
     return smp_message_get_cstring(message, 0, buildinfo);
 }
 
+int tup_message_init_resp_set_parameter(TupMessage *message, uint8_t effect_id,
+        int32_t retval, TupParameterArgs *args, size_t n_args)
+{
+    size_t i;
+    int ret;
+
+    smp_message_set_id(message, TUP_MESSAGE_RESP_SET_PARAMETER);
+
+    ret = smp_message_set(message, 0, SMP_TYPE_UINT8, effect_id,
+            1, SMP_TYPE_INT32, retval, -1);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0; i < n_args; i++) {
+        ret = smp_message_set(message,
+                2 + 2 * i + 0, SMP_TYPE_UINT8, args[i].parameter_id,
+                2 + 2 * i + 1, SMP_TYPE_UINT32, args[i].parameter_value,
+                -1);
+        if (ret < 0)
+            return ret;
+    }
+
+    return 0;
+}
+
+int tup_message_parse_resp_set_parameter(TupMessage *message,
+        uint8_t *effect_id, int32_t *retval, TupParameterArgs *args,
+        size_t n_args)
+{
+    int n_params;
+    int i;
+    int ret;
+
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_INPUT)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    n_params = tup_message_parse_resp_set_parameter_get_parameter_count(message);
+    if (n_params < 0)
+        return n_params;
+
+    if (n_args < (size_t) n_params)
+        return SMP_ERROR_OVERFLOW;
+
+    ret = smp_message_get(message, 0, SMP_TYPE_UINT8, &effect_id,
+            1, SMP_TYPE_INT32, &retval, -1);
+    if (ret < 0)
+        return ret;
+
+    for (i = 0; i < n_params; i++) {
+        ret = smp_message_get(message,
+                2 + 2 * i + 0, SMP_TYPE_UINT8, &args[i].parameter_id,
+                2 + 2 * i + 1, SMP_TYPE_UINT32, &args[i].parameter_value,
+                -1);
+        if (ret < 0)
+            return ret;
+    }
+
+    return n_params;
+}
+
+int tup_message_parse_resp_set_parameter_get_parameter_count(TupMessage *message)
+{
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_SET_PARAMETER)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    /* we use two args per parameter and we have effect id and return value
+     * at the beginning */
+    return (smp_message_n_args(message) - 2) / 2;
+}
+
+int tup_message_parse_resp_set_parameter_get_effect_id(TupMessage *message,
+        uint8_t *effect_id)
+{
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_SET_PARAMETER)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    return smp_message_get_uint8(message, 0, effect_id);
+}
+
+int tup_message_parse_resp_set_parameter_get_return_value(TupMessage *message,
+        int32_t *retval)
+{
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_SET_PARAMETER)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    return smp_message_get_int32(message, 1, retval);
+}
+
+int tup_message_parse_resp_set_parameter_get_parameter(TupMessage *message,
+        unsigned int index, TupParameterArgs *arg)
+{
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_SET_PARAMETER)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    return smp_message_get(message,
+            2 + 2 * index + 0, SMP_TYPE_UINT8, &arg->parameter_id,
+            2 + 2 * index + 1, SMP_TYPE_UINT32, &arg->parameter_value,
+            -1);
+}
+
 /**
  * \ingroup message
  * Initialize a message to get the system status.

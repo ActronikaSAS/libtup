@@ -135,7 +135,7 @@ SET_PARAMETER:
         ...
 
     expected response:
-        ACK, ERROR: [data] = slot
+        RESP_SET_PARAMETER
 
 BIND_EFFECT:
     direction:
@@ -303,4 +303,20 @@ RESP_INPUT:
         int32_t - value of the first requested input
         uint8_t - id of the second requested input
         int32_t - value of the second requested input
+        ...
+
+RESP_SET_PARAMETER:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Response to a SET_PARAMETER command which contains the parameter set
+
+    arguments:
+        uint8_t - slot of the effect
+        int32_t - success/error code (0: success, < 0: error code)
+        uint8_t - id of the first parameter set
+        uint32_t - value of the first parameter
+        uint8_t - id of the second parameter set
+        uint32_t - value of the second parameter
         ...
