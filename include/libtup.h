@@ -105,6 +105,7 @@ typedef enum
     TUP_MESSAGE_RESP_SENSOR = 102,
     TUP_MESSAGE_RESP_BUILDINFO = 103,
     TUP_MESSAGE_RESP_INPUT = 104,
+    TUP_MESSAGE_RESP_SET_PARAMETER = 105,
 
     TUP_MESSAGE_CMD_DEBUG_GET_SYSTEM_STATUS = 200,
     TUP_MESSAGE_RESP_DEBUG_SYSTEM_STATUS = 201,
@@ -366,6 +367,20 @@ TUP_API void tup_message_init_resp_buildinfo(TupMessage *message,
                 const char *buildinfo);
 TUP_API int tup_message_parse_resp_buildinfo(TupMessage *message,
                 const char **buildinfo);
+
+TUP_API int tup_message_init_resp_set_parameter(TupMessage *message,
+                uint8_t effect_id, int32_t retval, TupParameterArgs *args,
+                size_t n_args);
+TUP_API int tup_message_parse_resp_set_parameter(TupMessage *message,
+                uint8_t *effect_id, int32_t *retval, TupParameterArgs *args,
+                size_t n_args);
+TUP_API int tup_message_parse_resp_set_parameter_get_parameter_count(TupMessage *message);
+TUP_API int tup_message_parse_resp_set_parameter_get_effect_id(TupMessage *message,
+                uint8_t *effect_id);
+TUP_API int tup_message_parse_resp_set_parameter_get_return_value(TupMessage *message,
+                int32_t *retval);
+TUP_API int tup_message_parse_resp_set_parameter_get_parameter(TupMessage *message,
+                unsigned int index, TupParameterArgs *arg);
 
 TUP_API void tup_message_init_cmd_debug_get_system_status(TupMessage *message);
 
