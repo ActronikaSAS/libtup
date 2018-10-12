@@ -337,11 +337,11 @@ SMP_DEFINE_STATIC_CONTEXT(name##_smp, serial_rx_bufsize, serial_tx_bufsize,    \
 static TupContext* name##_create(const TupCallbacks *cbs, void *userdata)      \
 {                                                                              \
     SmpContext *ctx;                                                           \
-    SmpEventCallbacks scbs = {                                                 \
-        .new_message_cb =                                                      \
-            (void (*)(SmpContext* , SmpMessage *, void *)) cbs->new_message_cb,\
-        .error_cb = cbs->error_cb,                                             \
-    };                                                                         \
+    SmpEventCallbacks scbs;                                                    \
+                                                                               \
+    scbs.new_message_cb =                                                      \
+        (void (*)(SmpContext* , SmpMessage *, void *)) cbs->new_message_cb;    \
+    scbs.error_cb = cbs->error_cb;                                             \
                                                                                \
     ctx = name##_smp_create(&scbs, userdata);                                  \
     return tup_context_new_from_static(NULL, 0, ctx, NULL, NULL);              \
