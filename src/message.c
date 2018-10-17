@@ -1620,7 +1620,7 @@ int tup_message_init_resp_debug_system_status(TupMessage *message,
  *
  * @return 0 on success, a negative errno value otherwise.
  */
-int tup_message_init_parse_debug_system_status(TupMessage *message,
+int tup_message_parse_resp_debug_system_status(TupMessage *message,
         TupDebugSystemStatus *status, TupDebugTaskStatus *tasks, size_t n_tasks)
 {
     size_t i;

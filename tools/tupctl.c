@@ -137,7 +137,7 @@ static void handle_debug_system_status_response(SmpMessage *message)
     } tasks_stats = { 0, 0, 0, 0};
     int i;
 
-    n_tasks = tup_message_init_parse_debug_system_status(message, &status,
+    n_tasks = tup_message_parse_resp_debug_system_status(message, &status,
             unsorted_tasks, N_ELEMENTS(unsorted_tasks));
     if (n_tasks < 0) {
         fprintf(stderr, "failed to parse system status response\n");

@@ -356,7 +356,7 @@ TUP_API void tup_message_init_cmd_debug_get_system_status(TupMessage *message);
 TUP_API int tup_message_init_resp_debug_system_status(TupMessage *message,
                 TupDebugSystemStatus *status, TupDebugTaskStatus *tasks,
                 size_t n_tasks);
-TUP_API int tup_message_init_parse_debug_system_status(TupMessage *message,
+TUP_API int tup_message_parse_resp_debug_system_status(TupMessage *message,
                 TupDebugSystemStatus *status, TupDebugTaskStatus *tasks,
                 size_t n_tasks);
 
