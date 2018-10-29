@@ -54,4 +54,6 @@ libtup_dep = declare_dependency(link_with : libtup,
     include_directories : [libtup_incdir],
     dependencies : [libsmp_dep])
 
+install_headers(['include/libtup.h'])
+
 subdir('tools')
