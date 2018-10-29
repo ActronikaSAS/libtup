@@ -6,6 +6,8 @@ project('tup', 'c',
       ])
 
 c_compiler = meson.get_compiler('c')
+pkgconfig = import('pkgconfig')
+
 warning_flags = [
     # warnings flags
     '-Wno-unused-parameter',
@@ -55,5 +57,15 @@ libtup_dep = declare_dependency(link_with : libtup,
     dependencies : [libsmp_dep])
 
 install_headers(['include/libtup.h'])
+
+pkgconfig.generate(
+    name: 'tup',
+    description: 'Tactronik UART Protocol library',
+    version: meson.project_version(),
+    filebase: 'libtup',
+    libraries: libtup,
+    requires: 'libsmp',
+    url: 'https://github.com/ActronikaSAS/libtup'
+    )
 
 subdir('tools')
