@@ -1629,11 +1629,11 @@ int tup_message_parse_resp_debug_system_status(TupMessage *message,
     int sindex = 0;
 
     if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_DEBUG_SYSTEM_STATUS)
-        return -EBADMSG;
+        return SMP_ERROR_BAD_MESSAGE;
 
     n_msg_tasks = (smp_message_n_args(message) - 3) / 6;
     if (n_tasks < (size_t) n_msg_tasks)
-        return -EOVERFLOW;
+        return SMP_ERROR_OVERFLOW;
 
     ret = smp_message_get_uint64(message, sindex++, &status->rtime);
     if (ret < 0)
