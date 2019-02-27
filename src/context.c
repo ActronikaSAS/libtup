@@ -19,6 +19,10 @@
  * \defgroup context Context
  */
 
+#ifndef TUP_ENABLE_STATIC_API
+#define TUP_ENABLE_STATIC_API
+#endif
+
 #include "libtup.h"
 #include <stdio.h>
 #include <stdlib.h>

@@ -21,6 +21,10 @@
  * TUP message definition
  */
 
+#ifndef TUP_ENABLE_STATIC_API
+#define TUP_ENABLE_STATIC_API
+#endif
+
 #include "libtup.h"
 #include <errno.h>
 #include <stdarg.h>
