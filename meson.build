@@ -1,5 +1,5 @@
 project('tup', 'c',
-    version : '0.7.90',
+    version : '0.7.90.1',
     meson_version : '>= 0.43.0',
     default_options : [
       'warning_level=2'
