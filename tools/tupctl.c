@@ -207,6 +207,26 @@ static void handle_debug_system_status_response(SmpMessage *message)
     }
 }
 
+static TupFilterId tup_filter_id_from_name(const char *name)
+{
+    if (strcmp(name, "band-norm") == 0)
+        return TUP_FILTER_ID_BAND_NORM;
+    else
+        return TUP_FILTER_ID_NONE;
+}
+
+static const char *tup_filter_id_to_str(TupFilterId id)
+{
+    switch (id) {
+        case TUP_FILTER_ID_NONE:
+            return "none";
+        case TUP_FILTER_ID_BAND_NORM:
+            return "band-norm";
+        default:
+            return "unknown";
+    }
+}
+
 /* RX message handling */
 static void on_tup_message(TupContext *ctx, TupMessage *message, void *userdata)
 {
@@ -262,6 +282,32 @@ static void on_tup_message(TupContext *ctx, TupMessage *message, void *userdata)
 
             tup_message_parse_resp_buildinfo(message, &buildinfo);
             printf("build information:\n%s", buildinfo);
+            break;
+        }
+        case TUP_MESSAGE_RESP_FILTER_ACTIVE: {
+            TupFilterId filter;
+            uint8_t actuator_id;
+            bool active;
+
+            tup_message_parse_resp_filter_active(message, &filter, &actuator_id,
+                    &active);
+            printf("filter '%s' for actuator %u is %s\n",
+                    tup_filter_id_to_str(filter), actuator_id,
+                    active ? "enabled" : "disabled");
+            break;
+        }
+        case TUP_MESSAGE_RESP_BAND_NORM_COEFFS: {
+            uint8_t actuator_id;
+            float a[5], b[5];
+
+            tup_message_parse_resp_band_norm_coeffs(message, &actuator_id, a,
+                    b);
+            printf("band normalizer coefficients for actuator %u:\n"
+                    "a: %f %f %f %f %f\n"
+                    "b: %f %f %f %f %f\n",
+                    actuator_id,
+                    a[0], a[1], a[2], a[3], a[4],
+                    b[0], b[1], b[2], b[3], b[4]);
             break;
         }
         case TUP_MESSAGE_RESP_DEBUG_SYSTEM_STATUS:
@@ -618,6 +664,117 @@ error:
     return -EINVAL;
 }
 
+static int do_filter_get_active(int argc, char *argv[])
+{
+    TupMessage *msg;
+    TupFilterId filter;
+    unsigned int actuator_id;
+    int ret;
+
+    if (argc < 2) {
+        printf("missing arguments to 'filter_get_active'\n");
+        return -EINVAL;
+    }
+
+    filter = tup_filter_id_from_name(argv[0]);
+    if (filter == TUP_FILTER_ID_NONE) {
+        printf("bad filter name\n");
+        return -EINVAL;
+    }
+
+    actuator_id = atoi(argv[1]);
+
+    printf("getting '%s' filter state for actuator %u\n", argv[0], actuator_id);
+
+    msg = tup_message_new();
+    tup_message_init_filter_get_active(msg, filter, actuator_id);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
+
+    return ret;
+}
+
+static int do_filter_set_active(int argc, char *argv[])
+{
+    TupMessage *msg;
+    TupFilterId filter;
+    unsigned int actuator_id;
+    bool active;
+    int ret;
+
+    if (argc < 3) {
+        printf("missing arguments to 'filter_set_active'\n");
+        return -EINVAL;
+    }
+
+    filter = tup_filter_id_from_name(argv[0]);
+    if (filter == TUP_FILTER_ID_NONE) {
+        printf("bad filter name\n");
+        return -EINVAL;
+    }
+
+    actuator_id = atoi(argv[1]);
+    active = (atoi(argv[2]) == 0) ? false : true;
+
+    msg = tup_message_new();
+    tup_message_init_filter_set_active(msg, filter, actuator_id, active);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
+
+    return ret;
+}
+
+static int do_band_norm_get_coeffs(int argc, char *argv[])
+{
+    TupMessage *msg;
+    unsigned int actuator_id;
+    int ret;
+
+    if (argc < 1) {
+        printf("missing arguments\n");
+        return -EINVAL;
+    }
+
+    actuator_id = atoi(argv[0]);
+
+    printf("getting band normalize coefficients for actuator %u", actuator_id);
+
+    msg = tup_message_new();
+    tup_message_init_config_band_norm_get_coeffs(msg, actuator_id);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
+
+    return ret;
+}
+
+static int do_band_norm_set_coeffs(int argc, char *argv[])
+{
+    TupMessage *msg;
+    unsigned int actuator_id;
+    float a[5], b[5];
+    int i;
+    int ret;
+
+    if (argc < 11) {
+        printf("missing arguments\n");
+        return -EINVAL;
+    }
+
+    actuator_id = atoi(argv[0]);
+
+    for (i = 0; i < 5; i++) {
+        a[i] = strtof(argv[1 + i], NULL);
+        b[i] = strtof(argv[6 + i], NULL);
+    }
+
+    msg = tup_message_new();
+    tup_message_init_config_band_norm_set_coeffs(msg, actuator_id, a, b);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
+
+    return ret;
+}
+
 static int do_debug_get_system_status(int argc, char *argv[])
 {
     TupMessage *msg;
@@ -656,6 +813,19 @@ static const Command cmds[] = {
     { "activate_sensors", "<state>",
         "Activate (1) or not (0) the management of internal sensors",
         do_activate_internal_sensors},
+    { "filter_get_active", "<filter-id> <actuator-id>",
+        "Enable/disable filter for an actuator. Valid filters: band-norm",
+        do_filter_get_active },
+    { "filter_set_active", "<filter-id> <actuator-id> <active>",
+        "Enable/disable filter for an actuator. Valid filters: band-norm",
+        do_filter_set_active },
+    { "band_norm_get_coeffs", "<actuator-id>",
+        "Get the coefficients of band normalizer filter for an actuator",
+        do_band_norm_get_coeffs },
+    { "band_norm_set_coeffs",
+        "<actuator-id> <a0> <a1> <a2> <a3> <a4> <b0> <b1> <b2> <b3> <b4>",
+        "Set the coefficients of band normalizer filter for an actuator",
+        do_band_norm_set_coeffs },
     { "get_sys_status", "", "Get the system status (debug)",
         do_debug_get_system_status},
 };
