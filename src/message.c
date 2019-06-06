@@ -1381,6 +1381,215 @@ void tup_message_init_get_buildinfo(TupMessage *message)
 
 /**
  * \ingroup message
+ * Initialize a filter_get_active message
+ *
+ * @param[in] message the TupMessage
+ * @param[in] filter the filter id
+ * @param[in] active true if filter should be enabled, false otherwise
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_init_filter_get_active(TupMessage *message, TupFilterId filter,
+        uint8_t actuator_id)
+{
+    smp_message_set_id(message, TUP_MESSAGE_CMD_FILTER_GET_ACTIVE);
+    return smp_message_set(message, 0, SMP_TYPE_UINT8, filter,
+            1, SMP_TYPE_UINT8, actuator_id,
+            -1);
+}
+
+/**
+ * \ingroup message
+ * Parse a filter_get_active message
+ *
+ * @param[in] message the TupMessage
+ * @param[out] filter the filter to get the state from
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_parse_filter_get_active(TupMessage *message,
+        TupFilterId *filter, uint8_t *actuator_id)
+{
+    int msgid = smp_message_get_msgid(message);
+    uint8_t filter_tmp;
+    int ret;
+
+    if (msgid != TUP_MESSAGE_CMD_FILTER_GET_ACTIVE)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    ret = smp_message_get(message, 0, SMP_TYPE_UINT8, &filter_tmp,
+            1, SMP_TYPE_UINT8, actuator_id, -1);
+    if (ret < 0)
+        return ret;
+
+    *filter = (TupFilterId) filter_tmp;
+    return 0;
+}
+
+/**
+ * \ingroup message
+ * Initialize a filter_set_active message
+ *
+ * @param[in] message the TupMessage
+ * @param[in] filter the filter id
+ * @param[in] active true if filter should be enabled, false otherwise
+ *
+ * @return 0 on success, a SmpError otherwise.
+ */
+int tup_message_init_filter_set_active(TupMessage *message, TupFilterId filter,
+        uint8_t actuator_id, bool active)
+{
+    smp_message_set_id(message, TUP_MESSAGE_CMD_FILTER_SET_ACTIVE);
+    return smp_message_set(message, 0, SMP_TYPE_UINT8, filter,
+            1, SMP_TYPE_UINT8, actuator_id,
+            2, SMP_TYPE_UINT8, active ? 1 : 0,
+            -1);
+}
+
+/**
+ * \ingroup message
+ * Parse a filter_set_active message
+ *
+ * @param[in] message the TupMessage
+ * @param[out] filter the filter to set the state
+ * @param[out] active the requested filter status
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_parse_filter_set_active(TupMessage *message,
+        TupFilterId *filter, uint8_t *actuator_id, bool *active)
+{
+    int msgid = smp_message_get_msgid(message);
+    uint8_t filter_tmp;
+    uint8_t active_tmp;
+    int ret;
+
+    if (msgid != TUP_MESSAGE_CMD_FILTER_SET_ACTIVE)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    ret = smp_message_get(message, 0, SMP_TYPE_UINT8, &filter_tmp,
+            1, SMP_TYPE_UINT8, actuator_id,
+            2, SMP_TYPE_UINT8, &active_tmp,
+            -1);
+    if (ret < 0)
+        return ret;
+
+    *filter = (TupFilterId) filter_tmp;
+    *active = (active_tmp > 0) ? true : false;
+    return 0;
+}
+
+/**
+ * \ingroup message
+ * Initialize a config write message
+ *
+ * @param[in] message the TupMessage
+ */
+void tup_message_init_config_write(TupMessage *message)
+{
+    smp_message_set_id(message, TUP_MESSAGE_CMD_CONFIG_WRITE);
+}
+
+/**
+ * \ingroup message
+ * Initialize a message to get band normalization filter coefficients
+ *
+ * @param[in] message the TupMessage
+ * @param[in] actuator_id the actuator id to which the filter is attached
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_init_config_band_norm_get_coeffs(TupMessage *message,
+        uint8_t actuator_id)
+{
+    smp_message_set_id(message, TUP_MESSAGE_CMD_CONFIG_BAND_NORM_GET_COEFFS);
+    return smp_message_set_uint8(message, 0, actuator_id);
+}
+
+/**
+ * \ingroup message
+ * Parse CONFIG_BAND_NORM_GET_COEFFS message
+ *
+ * @param[in] message the TupMessage
+ * @param[out] actuator_id the actuator to get the coeffs from
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_parse_config_band_norm_get_coeffs(TupMessage *message,
+        uint8_t *actuator_id)
+{
+    int msgid = smp_message_get_msgid(message);
+
+    if (msgid != TUP_MESSAGE_CMD_CONFIG_BAND_NORM_GET_COEFFS)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    return smp_message_get_uint8(message, 0, actuator_id);
+}
+
+/**
+ * \ingroup message
+ * Initialize a CONFIG_BAND_NORM_SET_COEFFS message
+ *
+ * @param[in] message the TupMessage
+ * @param[in] actuator_id the actuator id to which the filter is attached
+ * @param[in] a the array of a coefficients
+ * @param[in] b the array of b coefficients
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_init_config_band_norm_set_coeffs(TupMessage *message,
+        uint8_t actuator_id, float a[5], float b[5])
+{
+    smp_message_set_id(message, TUP_MESSAGE_CMD_CONFIG_BAND_NORM_SET_COEFFS);
+    return smp_message_set(message, 0, SMP_TYPE_UINT8, actuator_id,
+            1, SMP_TYPE_F32, a[0],
+            2, SMP_TYPE_F32, a[1],
+            3, SMP_TYPE_F32, a[2],
+            4, SMP_TYPE_F32, a[3],
+            5, SMP_TYPE_F32, a[4],
+            6, SMP_TYPE_F32, b[0],
+            7, SMP_TYPE_F32, b[1],
+            8, SMP_TYPE_F32, b[2],
+            9, SMP_TYPE_F32, b[3],
+            10, SMP_TYPE_F32, b[4],
+            -1);
+}
+
+/**
+ * \ingroup message
+ * Parse a CONFIG_BAND_NORM_SET_COEFFS message
+ *
+ * @param[in] message the TupMessage
+ * @param[out] actuator_id the actuator id to which the filter is attached
+ * @param[out] a the array of a coefficients
+ * @param[out] b the array of b coefficients
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_parse_config_band_norm_set_coeffs(TupMessage *message,
+        uint8_t *actuator_id, float a[5], float b[5])
+{
+    int msgid = smp_message_get_msgid(message);
+
+    if (msgid != TUP_MESSAGE_CMD_CONFIG_BAND_NORM_SET_COEFFS)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    return smp_message_get(message, 0, SMP_TYPE_UINT8, actuator_id,
+            1, SMP_TYPE_F32, &a[0],
+            2, SMP_TYPE_F32, &a[1],
+            3, SMP_TYPE_F32, &a[2],
+            4, SMP_TYPE_F32, &a[3],
+            5, SMP_TYPE_F32, &a[4],
+            6, SMP_TYPE_F32, &b[0],
+            7, SMP_TYPE_F32, &b[1],
+            8, SMP_TYPE_F32, &b[2],
+            9, SMP_TYPE_F32, &b[3],
+            10, SMP_TYPE_F32, &b[4],
+            -1);
+}
+
+/**
+ * \ingroup message
  * Initialize a version response message with the given version.
  * Warning: due to smp limitation about string, version should exist as long as
  * message exist.
@@ -1817,6 +2026,120 @@ int tup_message_parse_resp_set_parameter_get_parameter(TupMessage *message,
     return smp_message_get(message,
             2 + 2 * index + 0, SMP_TYPE_UINT8, &arg->parameter_id,
             2 + 2 * index + 1, SMP_TYPE_UINT32, &arg->parameter_value,
+            -1);
+}
+
+/**
+ * \ingroup message
+ * Initialize a resp_filter_active message
+ *
+ * @param[in] message the TupMessage
+ * @param[in] filter the filter
+ * @param[in] active the filter status
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_init_resp_filter_active(TupMessage *message, TupFilterId filter,
+        uint8_t actuator_id, bool active)
+{
+    smp_message_set_id(message, TUP_MESSAGE_RESP_FILTER_ACTIVE);
+    return smp_message_set(message, 0, SMP_TYPE_UINT8, filter,
+            1, SMP_TYPE_UINT8, actuator_id,
+            2, SMP_TYPE_UINT8, active ? 1 : 0,
+            -1);
+}
+
+/**
+ * \ingroup message
+ * Parse a resp_filter_active message
+ *
+ * @param[in] message the TupMessage
+ * @param[out] filter the filter
+ * @param[out] active the filter status
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_parse_resp_filter_active(TupMessage *message,
+        TupFilterId *filter, uint8_t *actuator_id, bool *active)
+{
+    uint8_t filter_tmp;
+    uint8_t active_tmp;
+    int ret;
+
+    if (smp_message_get_msgid(message) != TUP_MESSAGE_RESP_FILTER_ACTIVE)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    ret = smp_message_get(message, 0, SMP_TYPE_UINT8, &filter_tmp,
+            1, SMP_TYPE_UINT8, actuator_id,
+            2, SMP_TYPE_UINT8, &active_tmp,
+            -1);
+    if (ret < 0)
+        return ret;
+
+    *filter = (TupFilterId) filter_tmp;
+    *active = (active_tmp > 0) ? true : false;
+    return 0;
+}
+
+/**
+ * \ingroup message
+ * Initialize a RESP_BAND_NORM_COEFFS message
+ *
+ * @param[in] message the TupMessage
+ * @param[in] actuator_id the actuator id to which the filter is attached
+ * @param[in] a the array of a coefficients
+ * @param[in] b the array of b coefficients
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_init_resp_band_norm_coeffs(TupMessage *message,
+        uint8_t actuator_id, float a[5], float b[5])
+{
+    smp_message_set_id(message, TUP_MESSAGE_RESP_BAND_NORM_COEFFS);
+    return smp_message_set(message, 0, SMP_TYPE_UINT8, actuator_id,
+            1, SMP_TYPE_F32, a[0],
+            2, SMP_TYPE_F32, a[1],
+            3, SMP_TYPE_F32, a[2],
+            4, SMP_TYPE_F32, a[3],
+            5, SMP_TYPE_F32, a[4],
+            6, SMP_TYPE_F32, b[0],
+            7, SMP_TYPE_F32, b[1],
+            8, SMP_TYPE_F32, b[2],
+            9, SMP_TYPE_F32, b[3],
+            10, SMP_TYPE_F32, b[4],
+            -1);
+}
+
+/**
+ * \ingroup message
+ * Parse a RESP_BAND_NORM_COEFFS message
+ *
+ * @param[in] message the TupMessage
+ * @param[out] actuator_id the actuator id to which the filter is attached
+ * @param[out] a the array of a coefficients
+ * @param[out] b the array of b coefficients
+ *
+ * @return 0 on success, a SmpError otherwise
+ */
+int tup_message_parse_resp_band_norm_coeffs(TupMessage *message,
+        uint8_t *actuator_id, float a[5], float b[5])
+{
+    int msgid = smp_message_get_msgid(message);
+
+    if (msgid != TUP_MESSAGE_RESP_BAND_NORM_COEFFS)
+        return SMP_ERROR_BAD_MESSAGE;
+
+    return smp_message_get(message, 0, SMP_TYPE_UINT8, actuator_id,
+            1, SMP_TYPE_F32, &a[0],
+            2, SMP_TYPE_F32, &a[1],
+            3, SMP_TYPE_F32, &a[2],
+            4, SMP_TYPE_F32, &a[3],
+            5, SMP_TYPE_F32, &a[4],
+            6, SMP_TYPE_F32, &b[0],
+            7, SMP_TYPE_F32, &b[1],
+            8, SMP_TYPE_F32, &b[2],
+            9, SMP_TYPE_F32, &b[3],
+            10, SMP_TYPE_F32, &b[4],
             -1);
 }
 

@@ -18,12 +18,19 @@ Message list and ids:
     20 - ACTIVATE_INTERNAL_SENSORS
     21 - GET_INPUT_VALUE
     22 - SET_INPUT_VALUE
+    23 - FILTER_GET_ACTIVE
+    24 - FILTER_SET_ACTIVE
+    25 - CONFIG_WRITE
+    26 - CONFIG_BAND_NORM_GET_COEFFS
+    27 - CONFIG_BAND_NORM_SET_COEFFS
 
     100 - RESP_VERSION
     101 - RESP_PARAMETER
     102 - RESP_SENSOR @DEPRECATED
     103 - RESP_BUILDINFO
     104 - RESP_INPUT
+    106 - RESP_FILTER_ACTIVE
+    107 - RESP_BAND_NORM_COEFFS
 
 
 ACK Message:
@@ -241,6 +248,81 @@ ACTIVATE_INTERNAL_SENSORS:
     expected response:
         ACK, ERROR: [data] = state
 
+FILTER_GET_ACTIVE:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Command to get the status of a filter for an actuator
+
+    arguments:
+        uint8_t - filter id
+        uint8_t - actuator id
+
+    expected response:
+        TUP_MESSAGE_RESP_FILTER_ACTIVE
+        ERROR
+
+FILTER_SET_ACTIVE:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Command to set the status of a filter for an actuator
+
+    arguments:
+        uint8_t - filter id
+        uint8_t - actuator id
+        uint8_t - activation request (0: disable, 1: enable)
+
+    expected response:
+        RESP_FILTER_ACTIVE
+        ERROR
+
+CONFIG_WRITE:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Write the current configuration into internal memory.
+
+    arguments:
+        none
+
+    expected response:
+        ACK
+        ERROR
+
+CONFIG_BAND_NORM_GET_COEFFS:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Get the band normalization filter coefficients for an actuator.
+
+    arguments:
+        uint8_t - actuator id
+
+    expected response:
+        RESP_BAND_NORM_COEFFS
+        ERROR
+
+CONFIG_BAND_NORM_SET_COEFFS:
+    direction:
+        Client --> Tactronik
+
+    description:
+        Set the band normalization filter coefficients for an actuator.
+
+    arguments:
+        uint8_t  - actuator id
+        float[5] - a coefficients
+        float[5] - b coefficients
+
+    expected response:
+        RESP_BAND_NORM_COEFFS
+        ERROR
+
 RESP_VERSION:
     direction:
         Tactronik --> Client
@@ -320,3 +402,29 @@ RESP_SET_PARAMETER:
         uint8_t - id of the second parameter set
         uint32_t - value of the second parameter
         ...
+
+RESP_FILTER_ACTIVE:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Response to a FILTER_GET_ACTIVE or FILTER_SET_ACTIVE command with the
+        filter and state.
+
+    arguments:
+        uint8_t - filter id
+        uint8_t - actuator id
+        uint8_t - filter state (0: disable, 1: enable)
+
+RESP_BAND_NORM_COEFFS:
+    direction:
+        Tactronik --> Client
+
+    description:
+        Response to a CONFIG_BAND_NORM_GET_COEFFS or CONFIG_BAND_NORM_SET_COEFFS
+        command with the coefficients for a given actuator.
+
+    arguments:
+        uint8_t - actuator id
+        float[5] - a coefficients
+        float[5] - b coefficients

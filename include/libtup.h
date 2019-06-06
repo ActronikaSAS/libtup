@@ -99,6 +99,11 @@ typedef enum
     TUP_MESSAGE_CMD_ACTIVATE_INTERNAL_SENSORS = 20,
     TUP_MESSAGE_CMD_GET_INPUT_VALUE = 21,
     TUP_MESSAGE_CMD_SET_INPUT_VALUE = 22,
+    TUP_MESSAGE_CMD_FILTER_GET_ACTIVE = 23,
+    TUP_MESSAGE_CMD_FILTER_SET_ACTIVE = 24,
+    TUP_MESSAGE_CMD_CONFIG_WRITE = 25,
+    TUP_MESSAGE_CMD_CONFIG_BAND_NORM_GET_COEFFS = 26,
+    TUP_MESSAGE_CMD_CONFIG_BAND_NORM_SET_COEFFS = 27,
 
     TUP_MESSAGE_RESP_VERSION = 100,
     TUP_MESSAGE_RESP_PARAMETER = 101,
@@ -106,6 +111,8 @@ typedef enum
     TUP_MESSAGE_RESP_BUILDINFO = 103,
     TUP_MESSAGE_RESP_INPUT = 104,
     TUP_MESSAGE_RESP_SET_PARAMETER = 105,
+    TUP_MESSAGE_RESP_FILTER_ACTIVE = 106,
+    TUP_MESSAGE_RESP_BAND_NORM_COEFFS = 107,
 
     TUP_MESSAGE_CMD_DEBUG_GET_SYSTEM_STATUS = 200,
     TUP_MESSAGE_RESP_DEBUG_SYSTEM_STATUS = 201,
@@ -177,6 +184,12 @@ typedef enum
  * Bind to both actuators 1 and 2.
  */
 #define TUP_BINDING_FLAG_BOTH (TUP_BINDING_FLAG_1 | TUP_BINDING_FLAG_2)
+
+typedef enum
+{
+    TUP_FILTER_ID_NONE = 0,
+    TUP_FILTER_ID_BAND_NORM = 1
+} TupFilterId;
 
 /**
  * \ingroup message
@@ -332,6 +345,27 @@ TUP_API int tup_message_init_set_input_value_array(TupMessage *message,
 TUP_API int tup_message_parse_set_input_value(TupMessage *message,
                 uint8_t *effect_slot_id, TupInputValueArgs *args, size_t size);
 
+TUP_API int tup_message_init_filter_get_active(TupMessage *message,
+                TupFilterId filter, uint8_t actuator_id);
+TUP_API int tup_message_parse_filter_get_active(TupMessage *message,
+                TupFilterId *filter, uint8_t *actuator_id);
+TUP_API int tup_message_init_filter_set_active(TupMessage *message,
+                TupFilterId filter, uint8_t actuator_id, bool active);
+TUP_API int tup_message_parse_filter_set_active(TupMessage *message,
+                TupFilterId *filter, uint8_t *actuator_id, bool *active);
+
+TUP_API void tup_message_init_config_write(TupMessage *message);
+
+TUP_API int tup_message_init_config_band_norm_get_coeffs(TupMessage *message,
+        uint8_t actuator_id);
+TUP_API int tup_message_parse_config_band_norm_get_coeffs(TupMessage *message,
+        uint8_t *actuator_id);
+
+TUP_API int tup_message_init_config_band_norm_set_coeffs(TupMessage *message,
+        uint8_t actuator_id, float a[5], float b[5]);
+TUP_API int tup_message_parse_config_band_norm_set_coeffs(TupMessage *message,
+        uint8_t *actuator_id, float a[5], float b[5]);
+
 TUP_API void tup_message_init_get_buildinfo(TupMessage *message);
 
 TUP_API void tup_message_init_activate_internal_sensors(TupMessage *message,
@@ -381,6 +415,16 @@ TUP_API int tup_message_parse_resp_set_parameter_get_return_value(TupMessage *me
                 int32_t *retval);
 TUP_API int tup_message_parse_resp_set_parameter_get_parameter(TupMessage *message,
                 unsigned int index, TupParameterArgs *arg);
+
+TUP_API int tup_message_init_resp_filter_active(TupMessage *message,
+        TupFilterId filter, uint8_t actuator_id, bool active);
+TUP_API int tup_message_parse_resp_filter_active(TupMessage *message,
+        TupFilterId *filter, uint8_t *actuator_id, bool *active);
+
+TUP_API int tup_message_init_resp_band_norm_coeffs(TupMessage *message,
+        uint8_t actuator_id, float a[5], float b[5]);
+TUP_API int tup_message_parse_resp_band_norm_coeffs(TupMessage *message,
+        uint8_t *actuator_id, float a[5], float b[5]);
 
 TUP_API void tup_message_init_cmd_debug_get_system_status(TupMessage *message);
 
