@@ -775,6 +775,19 @@ static int do_band_norm_set_coeffs(int argc, char *argv[])
     return ret;
 }
 
+static int do_write_config(int argc, char *argv[])
+{
+    TupMessage *msg;
+    int ret;
+
+    msg = tup_message_new();
+    tup_message_init_config_write(msg);
+    ret = tup_context_send(tup_ctx, msg);
+    tup_message_free(msg);
+
+    return ret;
+}
+
 static int do_debug_get_system_status(int argc, char *argv[])
 {
     TupMessage *msg;
@@ -826,6 +839,8 @@ static const Command cmds[] = {
         "<actuator-id> <a0> <a1> <a2> <a3> <a4> <b0> <b1> <b2> <b3> <b4>",
         "Set the coefficients of band normalizer filter for an actuator",
         do_band_norm_set_coeffs },
+    { "write_config", "", "Write configuration to persistant storage",
+        do_write_config },
     { "get_sys_status", "", "Get the system status (debug)",
         do_debug_get_system_status},
 };
