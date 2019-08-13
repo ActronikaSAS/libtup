@@ -1,6 +1,6 @@
 project('tup', 'c',
     version : '0.7.90.1',
-    meson_version : '>= 0.43.0',
+    meson_version : '>= 0.46.0',
     default_options : [
       'warning_level=2'
       ])
@@ -58,12 +58,11 @@ libtup_dep = declare_dependency(link_with : libtup,
 
 install_headers(['include/libtup.h'])
 
-pkgconfig.generate(
+pkgconfig.generate(libtup,
     name: 'tup',
     description: 'Tactronik UART Protocol library',
     version: meson.project_version(),
     filebase: 'libtup',
-    libraries: libtup,
     requires: 'libsmp',
     url: 'https://github.com/ActronikaSAS/libtup'
     )
